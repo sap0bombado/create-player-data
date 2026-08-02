@@ -49,7 +49,7 @@ function data_service_client.load<T>(self: self, data: T)
 	self.playerDataSynced:fire()
 end
 
-function data_service_client.get<T>(self: self, path: { string }): value.Value<any>
+function data_service_client.get<T>(self: self, path: { string }): value.value<any>
 	if not self.hasLoaded then self.playerDataSynced:wait() end
 
 	local current = self.data
@@ -73,10 +73,10 @@ function data_service_client.remove<T>(self: self, path: { string }, pos: number
 	self:get(path).Remove(pos)
 end
 
-export type DataServiceClient<T> = self
+export type data_controller = self
 
-export type Client<T> = value.Value<T> & {
-	controller: DataServiceClient<T>,
+export type client<T> = value.value<T> & {
+	controller: data_controller,
 }
 
 return data_service_client

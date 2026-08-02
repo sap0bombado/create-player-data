@@ -65,7 +65,7 @@ type DataTemplate = { [string | number]: any }
 
 	Provides options for initializing the DataServiceServer.
 ]=]
-type DataOptions<T> = utils.DataOptions<T>
+type DataOptions<T> = utils.data_options<T>
 type MessageData = { key: string, data: { any } }
 
 const data_service = {
@@ -81,7 +81,7 @@ const data_service = {
 	playerDataFailed = signal() :: signal.Signal<Player, string>,
 	playerDataEnded = signal() :: signal.Signal<Player>,
 
-	data = {} :: { [Player]: value.Value<any> & { service: self } },
+	data = {} :: { [Player]: value.value<any> & { service: self } },
 }
 
 --[=[
@@ -145,9 +145,7 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 	end
 
 	self._loading[player] = true
-	if not self._wait_signals[player] then
-		self._wait_signals[player] = signal()
-	end
+	if not self._wait_signals[player] then self._wait_signals[player] = signal() end
 
 	local userId = self.options.overridenUserId or self.options.viewedUserId or player.UserId
 	local index = self:_get_profile_key(userId)
@@ -187,7 +185,9 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 	end
 
 	if not player:IsDescendantOf(Players) then
-		if isSession then pcall(function() profile:EndSession() end) end
+		if isSession then pcall(function()
+			profile:EndSession()
+		end) end
 		self._profiles[player] = nil
 		self._sessions[player] = nil
 		self._loading[player] = nil
@@ -431,10 +431,11 @@ function data_service.waitForData(self: self, player: Player): any
 	return self.data[player]
 end
 
-export type DataServiceServer<T> = typeof(data_service) & {
-	data: { [Player]: value.Value<any> },
-	options: DataOptions<T>,
-	playerStore: any,
+export type data_service = typeof(data_service)
+
+export type server<T> = {
+	service: data_service,
+	[Player]: value.value<T>,
 }
 
 export type Public<T> = {

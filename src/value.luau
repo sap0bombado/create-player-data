@@ -11,7 +11,7 @@ local KEY_REMOVED_KEY = '_OnKeyRemovedCbs'
 local meta = {}
 local Value = { shouldRecordPath = false }
 
-local function adoptChildren(value: Value<any>)
+local function adoptChildren(value: value<any>)
 	local raw = value()
 	if type(raw) ~= 'table' then return end
 
@@ -39,7 +39,7 @@ local function adoptChildren(value: Value<any>)
 	end
 end
 
-local function sendChangedSignalToChildren(value: Value<any>, initial: boolean?)
+local function sendChangedSignalToChildren(value: value<any>, initial: boolean?)
 	if not initial then
 		local changedCbs = rawget(value, CHANGED_KEY) :: any
 		if changedCbs then
@@ -59,7 +59,7 @@ local function sendChangedSignalToChildren(value: Value<any>, initial: boolean?)
 end
 
 local function createCallbackFn(fnKey: string)
-	return function(value: Value<any>)
+	return function(value: value<any>)
 		return function<T>(cb: (T) -> () -> ())
 			local changedCbs = rawget(value, fnKey) :: any
 			if not changedCbs then
@@ -88,7 +88,7 @@ local OnRemove = createCallbackFn(ARRAY_REMOVED_KEY)
 local OnKeyAdded = createCallbackFn(KEY_ADDED_KEY)
 local OnKeyRemoved = createCallbackFn(KEY_REMOVED_KEY)
 
-local function fireChangeAndReplicate<T>(value: Value<T>, prevRawValue: T?, replicateType: string?, forcedReplication: boolean?, ...)
+local function fireChangeAndReplicate<T>(value: value<T>, prevRawValue: T?, replicateType: string?, forcedReplication: boolean?, ...)
 	local shouldReplicate = forcedReplication ~= false
 	local path = if Value.shouldRecordPath and shouldReplicate then {} else nil
 	local currentValue: any = value
@@ -138,7 +138,7 @@ local function fireChangeAndReplicate<T>(value: Value<T>, prevRawValue: T?, repl
 	if shouldReplicate and replicaterFn then (replicaterFn :: any)(replicateType, path, ...) end
 end
 
-local function ArrayInsert<T>(value: Value<any>)
+local function ArrayInsert<T>(value: value<any>)
 	return function(item: T, pos: number?, shouldReplicate: boolean?)
 		local raw = value()
 		if pos then
@@ -160,7 +160,7 @@ local function ArrayInsert<T>(value: Value<any>)
 	end
 end
 
-local function ArrayRemove<T>(value: Value<any>)
+local function ArrayRemove<T>(value: value<any>)
 	return function(pos: number?, shouldReplicate: boolean?)
 		local raw = value()
 		local removed = table.remove(raw, pos)
@@ -189,7 +189,7 @@ local FUNCTIONAL_KEYS = {
 	OnKeyRemoved = OnKeyRemoved,
 }
 
-meta.__index = function(value: Value<any>, index: string)
+meta.__index = function(value: value<any>, index: string)
 	local functionalKey = FUNCTIONAL_KEYS[index]
 	if functionalKey then return functionalKey(value) end
 
@@ -210,7 +210,7 @@ meta.__index = function(value: Value<any>, index: string)
 	return newChild
 end
 
-meta.__call = function(value: Value<any>, ...)
+meta.__call = function(value: value<any>, ...)
 	local rawParent = rawget(value, CONTAINER_KEY) :: any
 	local key = rawget(value, KEY_KEY) :: any
 	local raw = if key ~= nil then rawParent[key] else rawParent -- Root has no key
@@ -251,7 +251,7 @@ type ValueArrayMeta<T> = {
 }
 export type ValueBase<T> = (((T | (T) -> T)?, boolean?) -> T) & ValueMeta<T>
 type ValueArrayBase<T, U> = ValueBase<T> & ValueArrayMeta<U>
-export type Value<T> = ValueType<T>
+export type value<T> = ValueType<T>
 
 -- selene: allow(undefined_variable)
 type function ValueType(T)
@@ -277,7 +277,7 @@ type function ValueType(T)
 	end
 end
 
-function Value.new<T>(raw: T, key: string?, parent: Value<any>?, replicator: (({ string }, any?) -> ())?): ValueType<T>
+function Value.new<T>(raw: T, key: string?, parent: value<any>?, replicator: (({ string }, any?) -> ())?): ValueType<T>
 	local value = setmetatable({
 		[KEY_KEY] = key,
 		[PARENT_KEY] = parent,

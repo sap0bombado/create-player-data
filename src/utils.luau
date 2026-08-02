@@ -1,4 +1,4 @@
-export type DataOptions<T> = {
+export type data_options<T> = {
 	template: T,
 	useMock: boolean?,
 	viewedUserId: number?,
