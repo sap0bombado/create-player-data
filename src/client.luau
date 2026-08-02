@@ -12,7 +12,7 @@ const data_service_client = {
 	playerDataSynced = signal<<()>>(),
 }
 
-function data_service_client.init<T>(self: self, template: T): Client<T>
+function data_service_client.init<T>(self: self, template: T): client<T>
 	self.data = value.new {}
 	self.data.controller = self
 

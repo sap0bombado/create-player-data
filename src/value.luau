@@ -98,7 +98,7 @@ local function fireChangeAndReplicate<T>(value: value<T>, prevRawValue: T?, repl
 	local immediateParentValue = rawget(value, PARENT_KEY) :: any
 	if immediateParentValue ~= nil and replicateType == 'set' then
 		local key = rawget(value, KEY_KEY)
-		local rawValue = value()
+		local rawValue = (value :: any)()
 
 		if prevRawValue == nil and rawValue ~= nil then
 			local keyAddedCbs = rawget(immediateParentValue, KEY_ADDED_KEY) :: any

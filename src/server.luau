@@ -97,9 +97,9 @@ function data_service.init<T>(self: self, options: DataOptions<T>)
 
 	Players.PlayerRemoving:Connect(function(player: Player)
 		self:_on_player_removing(player)
-	end)
+	end);
 
-	self.data.service = self
+	(self.data :: any).service = self
 
 	return self.data
 end
