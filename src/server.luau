@@ -1,4 +1,3 @@
---!nolint
 const Players = game:GetService 'Players'
 const RunService = game:GetService 'RunService'
 

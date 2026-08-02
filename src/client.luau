@@ -1,4 +1,3 @@
---!nolint
 const RunService = game:GetService 'RunService'
 
 const network = require './network'
