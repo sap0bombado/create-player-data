@@ -2,9 +2,9 @@
 sidebar_position: 1
 ---
 
-# DataServiceTyped
+# create_player_data
 
-**DataServiceTyped** is persistent, typed, automatically replicated player data for Roblox Luau.
+**create_player_data** is persistent, typed, automatically replicated player data for Roblox Luau. It is a library, not a framework: you call `loadPlayer` yourself instead of it hooking into `PlayerAdded` for you.
 
 The API is intentionally small:
 
@@ -28,21 +28,21 @@ end)
 
 ## Installation
 
-Add `DataServiceTyped` to your `wally.toml`:
+Add `create_player_data` to your `pesde.toml`:
 
 ```toml
 [dependencies]
-DataServiceTyped = "leifstout/dataservicetyped@1.0.5"
+create_player_data = { pesde = "sap0bombado/create_player_data@0.1.0" }
 ```
 
 Then run:
 
 ```bash
-wally install
+pesde install
 ```
 
 :::important
-DataServiceTyped uses Luau's new type solver for its typed data API. Enable the new type solver in Workspace properties or Luau LSP settings for types and IntelliSense to work correctly.
+create_player_data uses Luau's new type solver for its typed data API. Enable the new type solver in Workspace properties or Luau LSP settings for types and IntelliSense to work correctly.
 :::
 
 ## Create Your Data
@@ -53,7 +53,7 @@ Create one shared data module. Most games call it `Data.luau`.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Packages = ReplicatedStorage.Packages
-local DataServiceTyped = require(Packages.DataServiceTyped)
+local createPlayerData = require(Packages.create_player_data)
 
 type ItemData = {
 	health: number,
@@ -75,7 +75,7 @@ local template = {
 	questProgress = {} :: { number },
 }
 
-return DataServiceTyped({
+return createPlayerData({
 	template = template,
 })
 ```
@@ -97,6 +97,78 @@ local Data = require(path.to.Data).client
 ```
 
 This keeps the local variable named `Data` everywhere.
+
+### Client Sync
+
+On the client, `require(...).client` returns immediately. Data arrives from the server after the profile loads; wait for `playerDataSynced` before reading:
+
+```lua
+local Data = require(path.to.Data).client
+
+Data.controller.playerDataSynced:wait()
+print(Data.currency())
+```
+
+`Data` is the data root on the client; access the client object through `Data.controller`.
+
+## Load Data
+
+create_player_data is a library, not a framework. It does not load players automatically. You decide when to load each player by calling `Data.service:loadPlayer(player)`.
+
+Connect it in your own `PlayerAdded` handler:
+
+```lua
+local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player)
+	task.spawn(function()
+		Data.service:loadPlayer(player)
+	end)
+end)
+```
+
+`loadPlayer` yields until the profile session opens, then returns a boolean:
+
+```lua
+local ok = Data.service:loadPlayer(player)
+if ok then
+	Data[player].currency(50)
+end
+```
+
+It is idempotent: calling it again for an already-loaded player returns `true` without reloading.
+
+Check whether a player is loaded without triggering a load:
+
+```lua
+if Data.service:isLoaded(player) then
+	print(Data[player].currency())
+end
+```
+
+Data is saved automatically when the player leaves.
+
+## Lifecycle Signals
+
+`Data.service` exposes three signals to react to loading state:
+
+```lua
+Data.service.playerDataLoaded:Connect(function(player)
+	print(player.Name, "data loaded")
+end)
+
+Data.service.playerDataFailed:Connect(function(player, err)
+	warn(player.Name, "failed to load:", err)
+end)
+
+Data.service.playerDataEnded:Connect(function(player)
+	print(player.Name, "data ended")
+end)
+```
+
+- `playerDataLoaded(player)` fires after `Data[player]` becomes available. Use it for migrations, defaults, and one-time cleanup.
+- `playerDataFailed(player, err)` fires when a load fails (profile returned `nil`, the datastore errored, or the player left mid-load).
+- `playerDataEnded(player)` fires after the player's data has been saved and removed on leave.
 
 ## Get
 
@@ -310,7 +382,7 @@ Data[player].items.potion_001.dmg(5)
 You can pass options when creating the data module:
 
 ```lua
-return DataServiceTyped({
+return createPlayerData({
 	template = template,
 	profileStoreIndex = "Default",
 	profileStoreDataPrefix = "PLAYER_",
@@ -337,5 +409,4 @@ return DataServiceTyped({
 
 ## Next Steps
 
-- Read about [service functions](./service-functions) for profile access, reset tools, loading hooks, and global messages.
-- Browse the [complete API reference](https://leifstout.github.io/dataServiceTyped/api)
+- Read about [service functions](./service-functions) for loading, lifecycle signals, profile access, reset tools, and global messages.

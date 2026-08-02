@@ -1,22 +1,24 @@
-local RunService = game:GetService("RunService")
+const RunService = game:GetService 'RunService'
 
-local DataServiceClient = require(script.DataServiceClient)
-local DataServiceServer = require(script.DataServiceServer)
-local DataServiceUtils = require(script.DataServiceUtils)
-local Value = require(script.Value)
+const client = require(script.client)
+const server = require(script.server)
+const utils = require(script.utils)
+const value = require(script.value)
 
-export type Client<T> = DataServiceClient.DataServiceClient<T>
-export type Server<T> = DataServiceServer.DataServiceServer<T>
-export type DataOptions<T> = DataServiceUtils.DataOptions<T>
-export type Value<T> = Value.Value<T>
-export type PublicDataServiceServer<T> = DataServiceServer.Public<T>
+export type Client<T> = client.Client<T>
+export type Server<T> = server.DataServiceServer<T>
+export type DataOptions<T> = utils.DataOptions<T>
+export type Value<T> = value.Value<T>
+export type PublicDataServiceServer<T> = server.Public<T>
 export type ServerPlayerData<T> = { [Player]: Value<T> } & {
-	Service: PublicDataServiceServer<T>,
+	service: PublicDataServiceServer<T>,
 }
 
-return function<T>(options: DataOptions<T>)
+const function createPlayerData<T>(options: DataOptions<T>)
 	return {
-		client = (if RunService:IsClient() then DataServiceClient:init(options.template) else {}) :: Value<T>,
-		server = (if RunService:IsServer() then DataServiceServer:init(options) else {}) :: ServerPlayerData<T>,
+		client = (if RunService:IsClient() then client:init(options.template) else {}) :: Client<T>,
+		server = (if RunService:IsServer() then server:init(options) else {}) :: ServerPlayerData<T>,
 	}
 end
+
+return createPlayerData

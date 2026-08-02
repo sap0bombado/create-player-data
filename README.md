@@ -1,11 +1,10 @@
-# DataServiceTyped
+# create_player_data
 
-Persistent, auto-replicated, and observable player data for Roblox Luau.
+Persistent, typed, auto-replicated player data for Roblox Luau.
+
+A library, not a framework: you call `loadPlayer` yourself instead of it hooking into `PlayerAdded` for you.
 
 ## Documentation
 
-- [Getting started](https://leifstout.github.io/dataServiceTyped/docs/intro)
-- [Complete API reference](https://leifstout.github.io/dataServiceTyped/api)
-- Video tutorial coming soon
-
-If you're new to the package, start with the getting started guide and then use the API reference for full method/type details.
+- [Getting started](./docs/intro.md)
+- [Service functions](./docs/service-functions.md)

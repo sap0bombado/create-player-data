@@ -1,0 +1,39 @@
+name = "sap0bombado/create_player_data"
+version = "0.1.0"
+description = "A fork of dataServiceTyped from leifstout"
+authors = ["sap0bombado"]
+license = "MIT"
+includes = [
+    "LICENSE",
+    "README.md",
+    "pesde.toml",
+    "src",
+    "src/*",
+    "default.project.json",
+]
+
+[target]
+environment = "roblox"
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
+
+[wally_indices]
+default = "https://github.com/UpliftGames/wally-index"
+
+[scripts]
+roblox_sync_config_generator = ".pesde/scripts/roblox_sync_config_generator.luau"
+sourcemap_generator = ".pesde/scripts/sourcemap_generator.luau"
+
+[dev_dependencies]
+scripts = { name = "pesde/scripts_rojo", version = "^0.2.0", target = "lune" }
+rojo = { name = "pesde/rojo", version = "^7.5.1", target = "lune" }
+
+[engines]
+pesde = "^0.7.0"
+lune = "^0.10.2"
+
+[dependencies]
+signal = { wally = "sap0bombado/create-signal", version = "^1.3.0" }
+profile_store = { wally = "lm-loleris/profilestore", version = "^1.0.3" }
+remo = { wally = "littensy/remo", version = "^1.5.3" }

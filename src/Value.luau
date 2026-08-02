@@ -1,21 +1,19 @@
-local PARENT_KEY = "___P"
-local KEY_KEY = "___K"
-local CHILDREN_KEY = "___C"
-local CONTAINER_KEY = "___X"
-local REPLICATOR_KEY = "___R"
-local CHANGED_KEY = "_ChangedCbs"
-local ARRAY_INSERTED_KEY = "_OnInsertCbs"
-local ARRAY_REMOVED_KEY = "_OnRemoveCbs"
-local KEY_ADDED_KEY = "_OnKeyAddedCbs"
-local KEY_REMOVED_KEY = "_OnKeyRemovedCbs"
+local PARENT_KEY = '___P'
+local KEY_KEY = '___K'
+local CHILDREN_KEY = '___C'
+local CONTAINER_KEY = '___X'
+local REPLICATOR_KEY = '___R'
+local CHANGED_KEY = '_ChangedCbs'
+local ARRAY_INSERTED_KEY = '_OnInsertCbs'
+local ARRAY_REMOVED_KEY = '_OnRemoveCbs'
+local KEY_ADDED_KEY = '_OnKeyAddedCbs'
+local KEY_REMOVED_KEY = '_OnKeyRemovedCbs'
 local meta = {}
 local Value = { shouldRecordPath = false }
 
 local function adoptChildren(value: Value<any>)
 	local raw = value()
-	if type(raw) ~= "table" then
-		return
-	end
+	if type(raw) ~= 'table' then return end
 
 	local children = rawget(value, CHILDREN_KEY) :: { [any]: any }
 	if not children then
@@ -33,15 +31,11 @@ local function adoptChildren(value: Value<any>)
 
 	for key, childValue in children do
 		rawset(childValue, CONTAINER_KEY, raw)
-		if raw[key] ~= nil then
-			continue
-		end
+		if raw[key] ~= nil then continue end
 
 		-- Maybe change to hasCallbackDeep in future
 		local hasChangedCallback = rawget(childValue, CHANGED_KEY) ~= nil
-		if not hasChangedCallback then
-			children[key] = nil
-		end
+		if not hasChangedCallback then children[key] = nil end
 	end
 end
 
@@ -57,9 +51,7 @@ local function sendChangedSignalToChildren(value: Value<any>, initial: boolean?)
 	end
 
 	local childrenValues = rawget(value, CHILDREN_KEY)
-	if not childrenValues then
-		return
-	end
+	if not childrenValues then return end
 
 	for _, childValue in childrenValues do
 		sendChangedSignalToChildren(childValue)
@@ -78,19 +70,13 @@ local function createCallbackFn(fnKey: string)
 			table.insert(changedCbs, cb)
 			return function()
 				local updatedCbs = rawget(value, fnKey) :: any
-				if not updatedCbs then
-					return
-				end
+				if not updatedCbs then return end
 
 				local cbIndex = table.find(updatedCbs, cb)
-				if not cbIndex then
-					return
-				end
+				if not cbIndex then return end
 
 				table.remove(updatedCbs, cbIndex)
-				if #updatedCbs == 0 then
-					rawset(value, fnKey, nil)
-				end
+				if #updatedCbs == 0 then rawset(value, fnKey, nil) end
 			end
 		end
 	end
@@ -102,13 +88,7 @@ local OnRemove = createCallbackFn(ARRAY_REMOVED_KEY)
 local OnKeyAdded = createCallbackFn(KEY_ADDED_KEY)
 local OnKeyRemoved = createCallbackFn(KEY_REMOVED_KEY)
 
-local function fireChangeAndReplicate<T>(
-	value: Value<T>,
-	prevRawValue: T?,
-	replicateType: string?,
-	forcedReplication: boolean?,
-	...
-)
+local function fireChangeAndReplicate<T>(value: Value<T>, prevRawValue: T?, replicateType: string?, forcedReplication: boolean?, ...)
 	local shouldReplicate = forcedReplication ~= false
 	local path = if Value.shouldRecordPath and shouldReplicate then {} else nil
 	local currentValue: any = value
@@ -116,7 +96,7 @@ local function fireChangeAndReplicate<T>(
 	local replicaterFn
 
 	local immediateParentValue = rawget(value, PARENT_KEY) :: any
-	if immediateParentValue ~= nil and replicateType == "set" then
+	if immediateParentValue ~= nil and replicateType == 'set' then
 		local key = rawget(value, KEY_KEY)
 		local rawValue = value()
 
@@ -139,13 +119,9 @@ local function fireChangeAndReplicate<T>(
 
 	repeat
 		local pathKey = rawget(currentValue, KEY_KEY)
-		if path and pathKey ~= nil then
-			table.insert(path, pathKey)
-		end
+		if path and pathKey ~= nil then table.insert(path, pathKey) end
 
-		if not replicaterFn then
-			replicaterFn = rawget(currentValue, REPLICATOR_KEY)
-		end
+		if not replicaterFn then replicaterFn = rawget(currentValue, REPLICATOR_KEY) end
 
 		local changedCbs = rawget(currentValue, CHANGED_KEY) :: any
 		if changedCbs then
@@ -159,9 +135,7 @@ local function fireChangeAndReplicate<T>(
 		currentValue = rawget(currentValue, PARENT_KEY) :: any
 	until currentValue == nil
 
-	if shouldReplicate and replicaterFn then
-		(replicaterFn :: any)(replicateType, path, ...)
-	end
+	if shouldReplicate and replicaterFn then (replicaterFn :: any)(replicateType, path, ...) end
 end
 
 local function ArrayInsert<T>(value: Value<any>)
@@ -174,7 +148,7 @@ local function ArrayInsert<T>(value: Value<any>)
 		end
 
 		adoptChildren(value)
-		fireChangeAndReplicate(value, nil, "insert", shouldReplicate, item, pos)
+		fireChangeAndReplicate(value, nil, 'insert', shouldReplicate, item, pos)
 
 		local insertedCbs = rawget(value, ARRAY_INSERTED_KEY)
 		if insertedCbs then
@@ -191,7 +165,7 @@ local function ArrayRemove<T>(value: Value<any>)
 		local raw = value()
 		local removed = table.remove(raw, pos)
 		adoptChildren(value)
-		fireChangeAndReplicate(value, nil, "remove", shouldReplicate, pos)
+		fireChangeAndReplicate(value, nil, 'remove', shouldReplicate, pos)
 
 		local removedCbs = rawget(value, ARRAY_REMOVED_KEY)
 		if removedCbs then
@@ -217,20 +191,13 @@ local FUNCTIONAL_KEYS = {
 
 meta.__index = function(value: Value<any>, index: string)
 	local functionalKey = FUNCTIONAL_KEYS[index]
-	if functionalKey then
-		return functionalKey(value)
-	end
+	if functionalKey then return functionalKey(value) end
 
 	local raw = value()
-	assert(
-		type(raw) == "table",
-		`attempted to index '{rawget(value, KEY_KEY)}'({typeof(raw)}) with '{index}'({typeof(index)})`
-	)
+	assert(type(raw) == 'table', `attempted to index '{rawget(value, KEY_KEY)}'({typeof(raw)}) with '{index}'({typeof(index)})`)
 
 	local valueChildren = rawget(value, CHILDREN_KEY) :: any
-	if valueChildren and valueChildren[index] ~= nil then
-		return valueChildren[index]
-	end
+	if valueChildren and valueChildren[index] ~= nil then return valueChildren[index] end
 
 	-- Adding new child index
 	local newChild = Value.new(raw, index, value)
@@ -248,12 +215,12 @@ meta.__call = function(value: Value<any>, ...)
 	local key = rawget(value, KEY_KEY) :: any
 	local raw = if key ~= nil then rawParent[key] else rawParent -- Root has no key
 
-	if select("#", ...) == 0 then -- someValue()
+	if select('#', ...) == 0 then -- someValue()
 		return raw
 	end
 
 	local param, shouldReplicate = ...
-	if type(param) == "function" then
+	if type(param) == 'function' then
 		rawParent[key] = (param :: any)(raw) -- someValue(fn(prev) return prev + 1 end)
 	else
 		rawParent[key] = param -- someValue(1)
@@ -262,7 +229,7 @@ meta.__call = function(value: Value<any>, ...)
 	local updatedRaw = rawParent[key]
 	adoptChildren(value)
 	sendChangedSignalToChildren(value, true)
-	fireChangeAndReplicate(value, raw, "set", shouldReplicate, updatedRaw)
+	fireChangeAndReplicate(value, raw, 'set', shouldReplicate, updatedRaw)
 
 	return updatedRaw
 end
@@ -289,18 +256,14 @@ export type Value<T> = ValueType<T>
 -- selene: allow(undefined_variable)
 type function ValueType(T)
 	local base = ValueBase(T)
-	if not T:is("table") then
-		return base
-	end
+	if not T:is 'table' then return base end
 
 	local indexer = T:indexer()
 	if indexer then -- { [string]: T } or { any }
 		local new = types.newtable()
 		local index = indexer.index
 		local result = indexer.readresult
-		local valueBase = if index:is("number")
-			then ValueArrayBase(T, result)
-			else types.intersectionof(ValueDictMeta(result), base)
+		local valueBase = if index:is 'number' then ValueArrayBase(T, result) else types.intersectionof(ValueDictMeta(result), base)
 
 		new:setindexer(index, ValueType(result))
 		return types.intersectionof(valueBase, new)

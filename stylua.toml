@@ -1,0 +1,8 @@
+syntax = "Luau"
+quote_style = "ForceSingle"
+call_parentheses = "None"
+collapse_simple_statement = "ConditionalOnly"
+column_width = 175
+
+[sort_requires]
+enabled = true
