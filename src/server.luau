@@ -73,6 +73,7 @@ const data_service = {
 	_sessions = {} :: { [Player]: boolean },
 	_wait_signals = {} :: { [Player]: signal.Signal<any> },
 	_removal_functions = {} :: { (player: Player, data: any) -> () },
+	_pending_message_waits = {} :: { [Player]: { any } },
 	_global_callbacks = {} :: { [string]: (player: Player, { any }) -> boolean? },
 	_global_callback_added = signal() :: signal.Signal<string>,
 
@@ -214,7 +215,21 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 			if (newCb :: any)(player, messageData.data) ~= false then processed() end
 
 			waitConnection:disconnect()
+
+			local pending = self._pending_message_waits[player]
+			if pending then
+				local index = table.find(pending, waitConnection)
+				if index then table.remove(pending, index) end
+			end
 		end)
+
+		local pending = self._pending_message_waits[player]
+		if not pending then
+			pending = {}
+			self._pending_message_waits[player] = pending
+		end
+
+		table.insert(pending, waitConnection)
 	end)
 
 	return true
@@ -270,6 +285,14 @@ end
 function data_service._on_player_removing(self: self, player: Player): ()
 	self._loading[player] = nil
 	self:_resolve_wait(player)
+
+	local pending = self._pending_message_waits[player]
+	self._pending_message_waits[player] = nil
+	if pending then
+		for _, connection in pending do
+			(connection :: any):disconnect()
+		end
+	end
 
 	local profile = self._profiles[player] :: any
 	self._profiles[player] = nil
