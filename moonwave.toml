@@ -1,8 +1,6 @@
-title = "DataServiceTyped"
+title = "create-player-data"
 
-classOrder = [
-	"DataServiceServer",
-]
+classOrder = ["data-server"]
 
 [docusaurus]
 tagline = "Persistent, auto-replicated, and observable data for Roblox Luau."

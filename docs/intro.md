@@ -4,9 +4,9 @@ sidebar_position: 1
 
 # create_player_data
 
-**create_player_data** is persistent, typed, automatically replicated player data for Roblox Luau. It is a library, not a framework: you call `loadPlayer` yourself instead of it hooking into `PlayerAdded` for you.
+**create_player_data** is persistent, typed, automatically replicated player data for Roblox Luau. It is a library, not a framework: you call `startSessionAsync` yourself instead of it hooking into `PlayerAdded` for you.
 
-The API is intentionally small:
+The API is intentionally small. On the server:
 
 ```lua
 Data[player].currency() -- get
@@ -16,12 +16,13 @@ Data[player].currency(function(currency) -- update
 end)
 ```
 
-On the client, it is the same idea without the `player`:
+On the client, the root is exposed through `Data:get()`:
 
 ```lua
-Data.currency()
-Data.currency(50)
-Data.currency.Changed(function(currency)
+local root = Data:get()
+root.currency()
+root.currency(50)
+root.currency.Changed(function(currency)
 	print(currency)
 end)
 ```
@@ -50,10 +51,9 @@ create_player_data uses Luau's new type solver for its typed data API. Enable th
 Create one shared data module. Most games call it `Data.luau`.
 
 ```lua title="Data.luau"
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ReplicatedStorage = game:GetService 'ReplicatedStorage'
 
-local Packages = ReplicatedStorage.Packages
-local createPlayerData = require(Packages.create_player_data)
+local createPlayerData = require '@pkg/create-player-data'
 
 type ItemData = {
 	health: number,
@@ -84,64 +84,45 @@ Keep saved data datastore-safe: numbers, strings, booleans, arrays, dictionaries
 
 ## Require It
 
-Require `.server` on the server:
+Require `.server` on the server and `.client` on the client, so the local variable is `Data` everywhere:
 
 ```lua
+-- server
 local Data = require(path.to.Data).server
-```
 
-Require `.client` on the client:
-
-```lua
+-- client
 local Data = require(path.to.Data).client
 ```
 
-This keeps the local variable named `Data` everywhere.
-
-### Client Sync
-
-On the client, `require(...).client` returns immediately. Data arrives from the server after the profile loads; wait for `playerDataSynced` before reading:
-
-```lua
-local Data = require(path.to.Data).client
-
-Data.controller.playerDataSynced:wait()
-print(Data.currency())
-```
-
-`Data` is the data root on the client; access the client object through `Data.controller`.
+On the server, `Data` is the service: it holds `Data[player]` and the lifecycle methods (`startSessionAsync`, `isLoaded`, endSession, ...). On the client it is the replicated mirror: call `Data:get()` for the reactive root, and `Data.use(callback)` or wait on `Data.playerDataSynced` before reading.
 
 ## Load Data
 
-create_player_data is a library, not a framework. It does not load players automatically. You decide when to load each player by calling `Data.service:loadPlayer(player)`.
-
-Connect it in your own `PlayerAdded` handler:
+create_player_data does not load players automatically. Connect `startSessionAsync` in your own `PlayerAdded` handler:
 
 ```lua
 local Players = game:GetService("Players")
 
 Players.PlayerAdded:Connect(function(player)
 	task.spawn(function()
-		Data.service:loadPlayer(player)
+		Data:startSessionAsync(player)
 	end)
 end)
 ```
 
-`loadPlayer` yields until the profile session opens, then returns a boolean:
+`startSessionAsync` yields until the profile session opens, then returns a boolean. It is idempotent: calling it again for an already-loaded player returns `true` without reloading.
 
 ```lua
-local ok = Data.service:loadPlayer(player)
+local ok = Data:startSessionAsync(player)
 if ok then
 	Data[player].currency(50)
 end
 ```
 
-It is idempotent: calling it again for an already-loaded player returns `true` without reloading.
-
 Check whether a player is loaded without triggering a load:
 
 ```lua
-if Data.service:isLoaded(player) then
+if Data:isLoaded(player) then
 	print(Data[player].currency())
 end
 ```
@@ -150,25 +131,32 @@ Data is saved automatically when the player leaves.
 
 ## Lifecycle Signals
 
-`Data.service` exposes three signals to react to loading state:
+`Data` fires three signals around loading:
 
 ```lua
-Data.service.playerDataLoaded:Connect(function(player)
+Data.playerDataLoaded:connect(function(player)
 	print(player.Name, "data loaded")
 end)
 
-Data.service.playerDataFailed:Connect(function(player, err)
+Data.playerDataFailed:connect(function(player, err)
 	warn(player.Name, "failed to load:", err)
 end)
 
-Data.service.playerDataEnded:Connect(function(player)
+Data.playerDataEnded:connect(function(player)
 	print(player.Name, "data ended")
 end)
 ```
 
 - `playerDataLoaded(player)` fires after `Data[player]` becomes available. Use it for migrations, defaults, and one-time cleanup.
 - `playerDataFailed(player, err)` fires when a load fails (profile returned `nil`, the datastore errored, or the player left mid-load).
-- `playerDataEnded(player)` fires after the player's data has been saved and removed on leave.
+- `playerDataEnded(player)` fires after the player's data has been saved and removed — on leave or when you end the session with `Data:endSession(player)`.
+
+On the client, `Data.playerDataSynced:wait()` resolves once the server data has replicated:
+
+```lua
+Data.playerDataSynced:wait()
+print(Data:get().currency())
+```
 
 ## Get
 
@@ -180,39 +168,19 @@ local apples = Data[player].inventory.apples()
 local musicEnabled = Data[player].settings.music()
 ```
 
-On the client:
-
-```lua
-local currency = Data.currency()
-local apples = Data.inventory.apples()
-```
-
 ## Set
 
-Call a field with a new value.
+Call a field with a new value. Clear optional values with `nil`.
 
 ```lua
 Data[player].currency(50)
 Data[player].inventory.apples(12)
 Data[player].settings.music(false)
 Data[player].equippedItemId("wooden_sword")
-```
-
-Clear optional values with `nil`.
-
-```lua
 Data[player].equippedItemId(nil)
 ```
 
-Server changes save and replicate to that player's client automatically.
-
-Client changes are local-only:
-
-```lua
-Data.settings.music(false)
-```
-
-That updates the client mirror and fires client callbacks, but it does not save and does not replicate to the server.
+Server changes save and replicate to that player's client automatically. Client changes via `Data:get()` update the local mirror and fire client callbacks, but do not save or replicate.
 
 ## Update
 
@@ -222,11 +190,7 @@ Call a field with a function to update from the current value.
 Data[player].currency(function(currency)
 	return currency + 10
 end)
-```
 
-The function receives the old value and returns the new value.
-
-```lua
 Data[player].inventory.apples(function(apples)
 	return math.max(0, apples - 1)
 end)
@@ -234,7 +198,7 @@ end)
 
 ## Listen
 
-Use `.Changed` on any field.
+Use `.Changed` on any field or table. Both server and client look the same.
 
 ```lua
 local disconnect = Data[player].currency.Changed(function(currency, previousCurrency)
@@ -244,23 +208,7 @@ end)
 disconnect()
 ```
 
-Client code looks the same:
-
-```lua
-Data.currency.Changed(function(currency)
-	print("Currency changed to", currency)
-end)
-```
-
-You can listen to nested fields:
-
-```lua
-Data[player].inventory.apples.Changed(function(apples)
-	print("Apples:", apples)
-end)
-```
-
-You can also listen to parent tables:
+Listen to a parent table to see which child changed:
 
 ```lua
 Data[player].inventory.Changed(function(inventory, previousChildValue, childKey)
@@ -270,7 +218,7 @@ end)
 
 ## Optional Replication
 
-Server writes replicate by default. Pass `false` as the second argument to skip replication for that write.
+Server writes replicate by default. Pass `false` as the last argument to skip replication for that mutation (the server data still changes and still saves).
 
 ```lua
 Data[player].currency(100, false)
@@ -280,56 +228,25 @@ Data[player].currency(function(currency)
 end, false)
 ```
 
-This still changes the server data and still saves. It only skips the server-to-client update for that mutation.
-
 ## Arrays
 
 Typed arrays get `.Insert`, `.Remove`, `.OnInsert`, and `.OnRemove`.
 
 ```lua
 Data[player].questProgress.Insert(10)
-Data[player].questProgress.Insert(20)
 Data[player].questProgress.Insert(15, 2)
+Data[player].questProgress.Insert(3, nil, false) -- no replicate
 
-print(Data[player].questProgress()[1]) -- 10
-print(Data[player].questProgress()[2]) -- 15
-print(Data[player].questProgress()[3]) -- 20
-```
+Data[player].questProgress.OnInsert(function(item, position) end)
 
-Remove by position:
-
-```lua
 local removed = Data[player].questProgress.Remove(2)
-```
-
-Omit the position to remove the last item:
-
-```lua
 local last = Data[player].questProgress.Remove()
-```
-
-Listen to array operations:
-
-```lua
-Data[player].questProgress.OnInsert(function(item, position)
-	print("Inserted", item, "at", position)
-end)
-
-Data[player].questProgress.OnRemove(function(item, position)
-	print("Removed", item, "from", position)
-end)
-```
-
-Skip replication for an array operation with `false`:
-
-```lua
-Data[player].questProgress.Insert(3, nil, false)
-Data[player].questProgress.Remove(1, false)
+Data[player].questProgress.OnRemove(function(item, position) end)
 ```
 
 ## Dictionaries
 
-String-keyed dictionaries work like normal nested data.
+String-keyed dictionaries work like nested data. Set an entry by assigning its table; remove it with `nil`.
 
 ```lua
 Data[player].items.sword_001({
@@ -338,48 +255,20 @@ Data[player].items.sword_001({
 })
 
 print(Data[player].items.sword_001.dmg())
-```
 
-Remove dictionary entries by setting them to `nil`.
-
-```lua
 Data[player].items.sword_001(nil)
 ```
 
-Listen for dictionary keys being added or removed with `.OnKeyAdded` and `.OnKeyRemoved`.
+Listen for keys appearing or disappearing with `.OnKeyAdded` and `.OnKeyRemoved`:
 
 ```lua
-Data[player].items.OnKeyAdded(function(key, item)
-	print("Added item", key, item.dmg)
-end)
-
-Data[player].items.OnKeyRemoved(function(key, item)
-	print("Removed item", key, item.dmg)
-end)
+Data[player].items.OnKeyAdded(function(key, item) end)
+Data[player].items.OnKeyRemoved(function(key, item) end)
 ```
 
-Both functions return a disconnect callback, just like `.Changed`.
-
-These fire when a key changes from `nil` to a value, or from a value to `nil`.
-
-```lua
-Data[player].items.potion_001({
-	health = 25,
-	dmg = 0,
-}) -- OnKeyAdded
-
-Data[player].items.potion_001(nil) -- OnKeyRemoved
-```
-
-Changing an existing key fires `.Changed`, not `.OnKeyAdded`.
-
-```lua
-Data[player].items.potion_001.dmg(5)
-```
+`.OnKeyAdded`/`.OnKeyRemoved` fire on `nil <-> value` transitions; changing an existing key fires `.Changed`, not `.OnKeyAdded`.
 
 ## Options
-
-You can pass options when creating the data module:
 
 ```lua
 return createPlayerData({

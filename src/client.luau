@@ -7,49 +7,64 @@ const value = require './value'
 if RunService:IsServer() then return {} :: any end
 
 const data_service_client = {
-	hasLoaded = false,
+	hasSynced = false,
 	playerDataSynced = signal<<()>>(),
 }
 
 function data_service_client.init<T>(self: self, template: T): client<T>
 	self.data = value.new {}
-	self.data.controller = self
 
 	network.sync:connect(function(data: T)
-		self:load(data)
+		self:_load(data)
 	end)
 
 	network.replicate:connect(function(replicateType: string, path: { string }, ...: any)
 		if replicateType == 'set' then
-			self:set(path, ...)
+			self:_set(path, ...)
 		elseif replicateType == 'insert' then
-			self:insert(path, ...)
+			self:_insert(path, ...)
 		elseif replicateType == 'remove' then
-			self:remove(path, ...)
+			self:_remove(path, ...)
 		end
 	end)
 
-	if not RunService:IsRunning() then self:load(template) end
+	if not RunService:IsRunning() then self:_load(template) end
 
-	return self.data
+	return self :: any
 end
 
 export type self = typeof(data_service_client)
 
-function data_service_client.load<T>(self: self, data: T)
-	if self.hasLoaded then return end
+function data_service_client._load<T>(self: self, data: T)
+	if self.hasSynced then return end
 
 	const raw = self.data()
 	for k, v in data :: any do
 		raw[k] = v
 	end
 
-	self.hasLoaded = true
+	self.hasSynced = true
 	self.playerDataSynced:fire()
 end
 
-function data_service_client.get<T>(self: self, path: { string }): value.value<any>
-	if not self.hasLoaded then self.playerDataSynced:wait() end
+function data_service_client:use(callback: (any) -> ())
+	if self.hasSynced then
+		task.spawn(callback, self.data)
+	else
+		self.playerDataSynced:once(function()
+			task.spawn(callback, self.data)
+		end)
+	end
+end
+
+function data_service_client:get(assert_synced: boolean?)
+	if assert_synced == true and self.hasSynced == false then error(`Player data has not synced yet. Use playerDataSynced:wait() to wait for it.`) end
+
+	return self.data
+end
+
+function data_service_client._get_with_path<T>(self: self, path: { string }): value.value<any>
+	if not self.hasSynced then self.playerDataSynced:wait() end
 
 	local current = self.data
 	for i = #path, 2, -1 do
@@ -60,22 +75,23 @@ function data_service_client.get<T>(self: self, path: { string }): value.value<a
 	return current[path[1]]
 end
 
-function data_service_client.set<T>(self: self, path: { string }, value: any?)
-	self:get(path)(value)
+function data_service_client._set<T>(self: self, path: { string }, value: any?)
+	self:_get_with_path(path)(value)
 end
 
-function data_service_client.insert<T>(self: self, path: { string }, item: any, pos: number?)
-	self:get(path).Insert(item, pos)
+function data_service_client._insert<T>(self: self, path: { string }, item: any, pos: number?)
+	self:_get_with_path(path).Insert(item, pos)
 end
 
-function data_service_client.remove<T>(self: self, path: { string }, pos: number?)
-	self:get(path).Remove(pos)
+function data_service_client._remove<T>(self: self, path: { string }, pos: number?)
+	self:_get_with_path(path).Remove(pos)
 end
 
-export type data_controller = self
-
-export type client<T> = value.value<T> & {
-	controller: data_controller,
+export type data_controller<T> = self & {
+	use: (self: data_controller<T>, callback: (value.value<T>) -> ()) -> (),
+	get: ((self: data_controller<T>) -> value.value<T>?) & ((self: data_controller<T>, assert_synced: true) -> value.value<T>),
 }
+
+export type client<T> = data_controller<T>
 
 return data_service_client

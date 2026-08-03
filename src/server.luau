@@ -67,6 +67,14 @@ type DataTemplate = { [string | number]: any }
 type DataOptions<T> = utils.data_options<T>
 type MessageData = { key: string, data: { any } }
 
+const function _store_cancel(player: Player)
+	return {
+		Cancel = function()
+			return player.Parent ~= Players
+		end,
+	}
+end
+
 const data_service = {
 	_profiles = {} :: any,
 	_loading = {} :: { [Player]: boolean },
@@ -80,66 +88,50 @@ const data_service = {
 	playerDataLoaded = signal() :: signal.Signal<Player>,
 	playerDataFailed = signal() :: signal.Signal<Player, string>,
 	playerDataEnded = signal() :: signal.Signal<Player>,
-
-	data = {} :: { [Player]: value.value<any> & { service: self } },
 }
 
 --[=[
 	@class DataServiceServer
 	The server-side service for managing player data.
 ]=]
-function data_service.init<T>(self: self, options: DataOptions<T>)
+function data_service.init<T>(self: self, options: DataOptions<T>): server<T>
 	assert(RunService:IsServer(), 'DataServiceServer can only be used on the server.')
 
 	value.shouldRecordPath = true
 	self.options = options
 	self.playerStore = profile_store.New(options.profileStoreIndex or DEFAULT_PROFILE_STORE_INDEX, options.template)
 
-	Players.PlayerRemoving:Connect(function(player: Player)
-		self:_on_player_removing(player)
-	end);
-
-	(self.data :: any).service = self
-
-	return self.data
+	return self
 end
 
 export type self = typeof(data_service)
 
-local function storeCancel(player: Player)
-	return {
-		Cancel = function()
-			return player.Parent ~= Players
-		end,
-	}
-end
-
 --[=[
-	@method loadPlayer
+	@method startSessionAsync
 	@within DataServiceServer
 	@yields
 	@param player Player
 	@return boolean
 
 	Loads the player's data, starting a ProfileStore session and making it
-	available through `data[player]`. Idempotent: if the player is already
+	available through `server[player]`. Idempotent: if the player is already
 	loaded, it returns `true` immediately.
 
 	```lua
-	local ok = Data.service:loadPlayer(player)
+	local ok = Data.server:startSessionAsync(player)
 	if not ok then
 		-- playerDataFailed already fired
 	end
 	```
 ]=]
-function data_service.loadPlayer(self: self, player: Player): boolean
-	if self.data[player] ~= nil then return true end
+function data_service.startSessionAsync(self: self, player: Player): boolean
+	if self[player] ~= nil then return true end
 
 	if self._loading[player] then
 		local waitSignal = self._wait_signals[player]
 		if waitSignal then
 			waitSignal:wait()
-			return self.data[player] ~= nil
+			return self[player] ~= nil
 		end
 		return false
 	end
@@ -147,26 +139,24 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 	self._loading[player] = true
 	if not self._wait_signals[player] then self._wait_signals[player] = signal() end
 
-	local userId = self.options.overridenUserId or self.options.viewedUserId or player.UserId
+	local userId = self:_resolve_user_id(player)
 	local index = self:_get_profile_key(userId)
 
 	if self.options.resetData and not self.options.viewedUserId then self.playerStore:RemoveAsync(index) end
 
 	local ok, profile = pcall(function()
 		if self.options.useMock then
-			return self.playerStore.Mock:StartSessionAsync(index, storeCancel(player))
+			return self.playerStore.Mock:StartSessionAsync(index, _store_cancel(player))
 		elseif self.options.viewedUserId or self.options.dontSave then
 			return self.playerStore:GetAsync(index)
 		else
-			return self.playerStore:StartSessionAsync(index, storeCancel(player))
+			return self.playerStore:StartSessionAsync(index, _store_cancel(player))
 		end
 	end)
 
 	if not ok or profile == nil then
 		warn(`Failed to load data for {player.Name}: {profile}`)
-		self._loading[player] = nil
-		self:_resolve_wait(player)
-		self.playerDataFailed:fire(player, profile)
+		self:_on_player_data_failed(player, profile)
 		return false
 	end
 
@@ -178,6 +168,8 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 
 	if isSession then
 		profile.OnSessionEnd:Connect(function()
+			if self._profiles[player] == nil then return end -- já encerrada via endSession/resetData/leave
+
 			self._profiles[player] = nil
 			self._sessions[player] = nil
 			if player.Parent then player:Kick(`Profile session end - Please rejoin`) end
@@ -188,103 +180,42 @@ function data_service.loadPlayer(self: self, player: Player): boolean
 		if isSession then pcall(function()
 			profile:EndSession()
 		end) end
-		self._profiles[player] = nil
-		self._sessions[player] = nil
-		self._loading[player] = nil
-		self:_resolve_wait(player)
-		self.playerDataFailed:fire(player, 'Player left before data loaded')
+		self:_on_player_data_failed(player, 'Player left before data loaded')
 		return false
 	end
 
 	self._profiles[player] = profile
-	self:_setup_player(player, profile.Data)
+	self:_setup_player(player, profile.Data :: any)
 	self._loading[player] = nil
 
 	profile:MessageHandler(function(messageData: MessageData, processed: () -> ())
 		local cb = self._global_callbacks[messageData.key]
 		if cb then
-			if (cb :: any)(player, messageData.data) ~= false then processed() end
+			if cb(player, messageData.data) ~= false then processed() end
 			return
 		end
 
-		local waitConnection: any
-		waitConnection = self._global_callback_added:connect(function(key: string)
-			if key ~= messageData.key then return end
-
-			local newCb = self._global_callbacks[messageData.key]
-			if (newCb :: any)(player, messageData.data) ~= false then processed() end
-
-			waitConnection:disconnect()
-
-			local pending = self._pending_message_waits[player]
-			if pending then
-				local index = table.find(pending, waitConnection)
-				if index then table.remove(pending, index) end
-			end
-		end)
-
-		local pending = self._pending_message_waits[player]
-		if not pending then
-			pending = {}
-			self._pending_message_waits[player] = pending
-		end
-
-		table.insert(pending, waitConnection)
+		self:_wait_for_global_callback(player, messageData, processed)
 	end)
 
 	return true
 end
 
 --[=[
-	@method isLoaded
-	@within DataServiceServer
-	@param player Player
-	@return boolean
-
-	Returns whether the player's data has been loaded and is available through `data[player]`.
-
-	```lua
-	if Data.service:isLoaded(player) then
-		print(Data[player].coins())
-	end
-	```
-]=]
-function data_service.isLoaded(self: self, player: Player): boolean
-	return self.data[player] ~= nil
-end
-
---[=[
-	@method resetData
+	@method endSession
 	@within DataServiceServer
 	@param player Player
 
-	Resets the data for the specified player by removing their profile from the store.
-	The player is then kicked from the game with a message to rejoin.
+	Ends the player's profile session: saves and releases it, removes
+	`Data.server[player]`, and fires `playerDataEnded`. Does not touch the Player
+	instance or kick the player.
 
 	```lua
-	Data.service:resetData(player)
+	Data.server:endSession(player)
 	```
 ]=]
-function data_service.resetData(self: self, player: Player): ()
-	local userId = self.options.overridenUserId or self.options.viewedUserId or player.UserId
-	local index = self:_get_profile_key(userId)
-	self:_on_player_removing(player)
-	self.playerStore:RemoveAsync(index)
-	player:Kick 'Your data has been reset. Please rejoin.'
-end
-
-function data_service._resolve_wait(self: self, player: Player): ()
-	local waitSignal = self._wait_signals[player]
-	if waitSignal then
-		waitSignal:fire()
-		waitSignal:disconnectAll()
-		self._wait_signals[player] = nil
-	end
-end
-
-function data_service._on_player_removing(self: self, player: Player): ()
-	self._loading[player] = nil
-	self:_resolve_wait(player)
+function data_service.endSession(self: self, player: Player): ()
+	self:_stop_loading(player)
 
 	local pending = self._pending_message_waits[player]
 	self._pending_message_waits[player] = nil
@@ -306,8 +237,36 @@ function data_service._on_player_removing(self: self, player: Player): ()
 	if self._sessions[player] then profile:EndSession() end
 	self._sessions[player] = nil
 
-	self.data[player] = nil
+	self[player] = nil
 	self.playerDataEnded:fire(player)
+end
+
+--[=[
+	@method resetData
+	@within DataServiceServer
+	@param player Player
+
+	Resets the data for the specified player by removing their profile from the store.
+	The player is then kicked from the game with a message to rejoin.
+
+	```lua
+	Data.server:resetData(player)
+	```
+]=]
+function data_service.resetData(self: self, player: Player): ()
+	local userId = self:_resolve_user_id(player)
+	local index = self:_get_profile_key(userId)
+	local profile = self._profiles[player] :: any
+	self:endSession(player)
+
+	if profile then
+		while profile:IsActive() do
+			task.wait()
+		end -- ponytail: polling; trocar por evento OnSessionEnd se incomodar
+	end
+
+	self.playerStore:RemoveAsync(index)
+	player:Kick 'Your data has been reset. Please rejoin.'
 end
 
 --[=[
@@ -322,7 +281,7 @@ end
 	Returns true if the message was sent successfully, false otherwise.
 
 	```lua
-	Data.service:sendGlobalMessage("SendGift", userId, { currency = 100, from = "Friend" })
+	Data.server:sendGlobalMessage("SendGift", userId, { currency = 100, from = "Friend" })
 	```
 ]=]
 function data_service.sendGlobalMessage(self: self, key: string, userId: number | string, data: { any }): boolean
@@ -341,7 +300,7 @@ end
 	If the callback returns false, the message is not processed further.
 
 	```lua
-	Data.service:addGlobalCallback("SendGift", function(player: Player, data: { any }): boolean?
+	Data.server:addGlobalCallback("SendGift", function(player: Player, data: { any }): boolean?
 		print("Received gift for", player.Name, "with data:", data)
 		-- Process the gift here
 	end)
@@ -353,25 +312,6 @@ function data_service.addGlobalCallback(self: self, key: string, cb: (player: Pl
 	self._global_callback_added:fire(key)
 end
 
-function data_service._get_profile_key(self: self, userId: number | string): string
-	return self:_get_data_prefix() .. tostring(userId)
-end
-
-function data_service._get_data_prefix(self: self): string
-	return self.options.profileStoreDataPrefix or DATA_PREFIX
-end
-
-function data_service._setup_player<T>(self: self, player: Player, data: T): ()
-	network.sync:fire(player, data)
-
-	self.data[player] = value.new(data, nil, nil, function(replicateType: string, path: { string }, ...)
-		network.replicate:fire(player, replicateType, path, ...)
-	end)
-
-	self:_resolve_wait(player)
-	self.playerDataLoaded:fire(player)
-end
-
 --[=[
 	@method addPlayerRemovingCallback
 	@within DataServiceServer
@@ -381,14 +321,14 @@ end
 	Used to perform cleanup or save data before the player leaves.
 
 	```lua
-	Data.service:addPlayerRemovingCallback(function(player: Player, data: any): ()
+	Data.server:addPlayerRemovingCallback(function(player: Player, data: any): ()
 		print(player.Name .. " is leaving with data:", data)
 		-- Perform any cleanup or save operations here
 	end)
 	```
 
 	```lua
-	local disconnect = Data.service:addPlayerRemovingCallback(function(player: Player, data: any): ()
+	local disconnect = Data.server:addPlayerRemovingCallback(function(player: Player, data: any): ()
 		data.currency = 0
 	end)
 
@@ -402,6 +342,31 @@ function data_service.addPlayerRemovingCallback(self: self, fn: (player: Player,
 		local index = table.find(self._removal_functions, fn)
 		if index then table.remove(self._removal_functions, index) end
 	end
+end
+
+--[=[
+	@method waitForData
+	@within DataServiceServer
+	@yields
+	@param player Player
+	@return Data?
+
+	Waits for the player's data to be initialized and returns it.
+	If the data is already available, it returns immediately.
+	Returns `nil` if the player leaves before their data loads.
+]=]
+function data_service.waitForData(self: self, player: Player): any
+	local data = self[player]
+	if data then return data end
+
+	local waitSignal = self._wait_signals[player]
+	if not waitSignal then
+		waitSignal = signal()
+		self._wait_signals[player] = waitSignal
+	end
+
+	waitSignal:wait()
+	return self[player]
 end
 
 --[=[
@@ -428,48 +393,107 @@ function data_service.getProfile(self: self, player: Player): any
 	return self._profiles[player]
 end
 
---[=[
-	@method waitForData
-	@within DataServiceServer
-	@yields
-	@param player Player
-	@return Data?
+function data_service:get(player: Player, should_assert: boolean?): any
+	const data = self[player]
 
-	Waits for the player's data to be initialized and returns it.
-	If the data is already available, it returns immediately.
-	Returns `nil` if the player leaves before their data loads.
-]=]
-function data_service.waitForData(self: self, player: Player): any
-	local data = self.data[player]
-	if data then return data end
+	if should_assert and not data then error(`Data for player {player.Name} is not loaded. Use waitForData() to wait for it.`) end
 
-	local waitSignal = self._wait_signals[player]
-	if not waitSignal then
-		waitSignal = signal()
-		self._wait_signals[player] = waitSignal
-	end
-
-	waitSignal:wait()
-	return self.data[player]
+	return data
 end
 
-export type data_service = typeof(data_service)
+--[=[
+	@method isLoaded
+	@within DataServiceServer
+	@param player Player
+	@return boolean
 
-export type server<T> = {
-	service: data_service,
-	[Player]: value.value<T>,
+	Returns whether the player's data has been loaded and is available through `server[player]`.
+
+	```lua
+	if Data.server:isLoaded(player) then
+		print(Data.server[player].coins())
+	end
+	```
+]=]
+function data_service.isLoaded(self: self, player: Player): boolean
+	return self[player] ~= nil
+end
+
+function data_service._resolve_wait(self: self, player: Player): ()
+	local waitSignal = self._wait_signals[player]
+	if waitSignal then
+		waitSignal:fire()
+		waitSignal:disconnectAll()
+		self._wait_signals[player] = nil
+	end
+end
+
+function data_service._stop_loading(self: self, player: Player): ()
+	self._loading[player] = nil
+	self:_resolve_wait(player)
+end
+
+function data_service._on_player_data_failed(self: self, player: Player, reason: string): ()
+	self:_stop_loading(player)
+	self._sessions[player] = nil
+	self.playerDataFailed:fire(player, reason)
+end
+
+function data_service._wait_for_global_callback(self: self, player: Player, messageData: MessageData, processed: () -> ()): ()
+	local waitConnection: any
+	waitConnection = self._global_callback_added:connect(function(key: string)
+		if key ~= messageData.key then return end
+
+		local newCb = self._global_callbacks[messageData.key]
+		if (newCb :: any)(player, messageData.data) ~= false then processed() end
+
+		waitConnection:disconnect()
+
+		local pending = self._pending_message_waits[player]
+		if pending then
+			local index = table.find(pending, waitConnection)
+			if index then table.remove(pending, index) end
+		end
+	end)
+
+	local pending = self._pending_message_waits[player]
+	if not pending then
+		pending = {}
+		self._pending_message_waits[player] = pending
+	end
+
+	table.insert(pending, waitConnection)
+end
+
+function data_service._get_profile_key(self: self, userId: number | string): string
+	return self:_get_data_prefix() .. tostring(userId)
+end
+
+function data_service._resolve_user_id(self: self, player: Player): number
+	return self.options.overridenUserId or self.options.viewedUserId or player.UserId
+end
+
+function data_service._get_data_prefix(self: self): string
+	return self.options.profileStoreDataPrefix or DATA_PREFIX
+end
+
+function data_service._setup_player<T>(self: self, player: Player, data: T): ()
+	network.sync:fire(player, data)
+
+	self[player] = value.new(data, nil, nil, function(replicateType: string, path: { string }, ...)
+		network.replicate:fire(player, replicateType, path, ...)
+	end)
+
+	self:_resolve_wait(player)
+	self.playerDataLoaded:fire(player)
+end
+
+export type data_service<T> = typeof(data_service) & {
+	get: ((self: data_service<T>, player: Player) -> value.value<T>?) & ((self: data_service<T>, player: Player, assert: true) -> value.value<T>),
 }
 
-export type Public<T> = {
-	loadPlayer: (self: any, player: Player) -> boolean,
-	isLoaded: (self: any, player: Player) -> boolean,
-	waitForData: (self: any, player: Player) -> (),
-	getProfile: (self: any, player: Player) -> any,
-	asyncGetProfile: (self: any, userId: number | string) -> any,
-	resetData: (self: any, player: Player) -> (),
-	addPlayerRemovingCallback: (self: any, fn: (player: Player, data: any) -> ()) -> () -> (),
-	addGlobalCallback: (self: any, key: string, cb: (player: Player, { any }) -> boolean?) -> (),
-	sendGlobalMessage: (self: any, key: string, userId: number | string, data: { any }) -> (),
+export type server<T> = data_service<T> & {
+	[Player]: value.value<T>?,
 }
 
 return data_service

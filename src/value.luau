@@ -236,8 +236,8 @@ end
 
 type ArrayRemove<T> = (number?, boolean?) -> T
 type ArrayInsert<T> = (T, number?, boolean?) -> ()
-type OnArrayRemove<T> = ((T, number?) -> ()) -> () -> ()
-type OnArrayInsert<T> = ((T, number?) -> ()) -> () -> ()
+type OnArrayRemove<T> = ((T, number) -> ()) -> () -> ()
+type OnArrayInsert<T> = ((T, number) -> ()) -> () -> ()
 type Changed<T> = ((T, T, string?) -> ()) -> () -> ()
 type OnKeyAdded<T> = ((string, T) -> ()) -> () -> ()
 type OnKeyRemoved<T> = ((string, T) -> ()) -> () -> ()

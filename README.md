@@ -2,7 +2,7 @@
 
 Persistent, typed, auto-replicated player data for Roblox Luau.
 
-A library, not a framework: you call `loadPlayer` yourself instead of it hooking into `PlayerAdded` for you.
+A library, not a framework: you call `startSessionAsync` yourself instead of it hooking into `PlayerAdded` for you.
 
 ## Documentation
 

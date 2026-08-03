@@ -1,3 +1,4 @@
+--!strict
 const RunService = game:GetService 'RunService'
 
 const client = require(script.client)
@@ -16,5 +17,15 @@ const function createPlayerData<T>(options: data_options<T>)
 		server = (if RunService:IsServer() then server:init(options) else {}) :: server<T>,
 	}
 end
+
+const player_data = createPlayerData {
+	template = {
+		coins = 10,
+		inventory = {} :: { string },
+	},
+}
+
+const player_data_server = player_data.server
+local player: Player = nil :: any
 
 return createPlayerData
