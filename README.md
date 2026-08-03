@@ -4,4 +4,4 @@ Persistent, typed, auto-replicated player data for Roblox Luau.
 
 ## Documentation
 
-- [Getting started](https://github.com/sap0bombado/create-player-data/blob/main/docs/intro.md)
+- [Getting started](https://sap0bombado.github.io/create-player-data/docs/intro)
