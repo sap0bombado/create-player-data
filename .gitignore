@@ -5,9 +5,11 @@
 /*.rbxlx.lock
 /*.rbxl.lock
 
+node_modules/**
 roblox_packages/
 roblox_server_packages/
 lune_packages/
 luau_packages/
 .pesde/
 build/
+sourcemap.json

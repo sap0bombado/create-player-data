@@ -16,9 +16,9 @@ local DEFAULT_PROFILE_STORE_INDEX = 'Default'
 
 --[=[
 	@type DataTemplate { [string]: any }
-	@within DataServiceServer
+	@within DataServer
 	
-	Defines the structure of player data used by the DataServiceServer.
+	Defines the structure of player data used by the DataServer.
 
 	```lua
 	local datatemplate = {
@@ -47,7 +47,7 @@ type DataTemplate = { [string | number]: any }
 
 --[=[
 	@interface DataOptions
-	@within DataServiceServer
+	@within DataServer
 	.template DataTemplate -- Template dictionary for player data.
 	.profileStoreIndex string -- Index for the ProfileStore.
 	.useMock boolean? -- Use Mock data for testing.
@@ -63,7 +63,7 @@ type DataTemplate = { [string | number]: any }
 	}
 	```
 
-	Provides options for initializing the DataServiceServer.
+	Provides options for initializing the DataServer.
 ]=]
 type DataOptions<T> = utils.data_options<T>
 type MessageData = { key: string, data: { any } }
@@ -92,11 +92,11 @@ local data_service = {
 }
 
 --[=[
-	@class DataServiceServer
+	@class DataServer
 	The server-side service for managing player data.
 ]=]
 function data_service.init<T>(self: self, options: DataOptions<T>): server<T>
-	assert(RunService:IsServer(), 'DataServiceServer can only be used on the server.')
+	assert(RunService:IsServer(), 'DataServer can only be used on the server.')
 
 	value.shouldRecordPath = true
 	self.options = options
@@ -109,7 +109,7 @@ export type self = typeof(data_service)
 
 --[=[
 	@method startSessionAsync
-	@within DataServiceServer
+	@within DataServer
 	@yields
 	@param player Player
 	@return boolean
@@ -203,7 +203,7 @@ end
 
 --[=[
 	@method endSession
-	@within DataServiceServer
+	@within DataServer
 	@param player Player
 
 	Ends the player's profile session: saves and releases it, removes
@@ -243,7 +243,7 @@ end
 
 --[=[
 	@method resetData
-	@within DataServiceServer
+	@within DataServer
 	@param player Player
 
 	Resets the data for the specified player by removing their profile from the store.
@@ -271,7 +271,7 @@ end
 
 --[=[
 	@method sendGlobalMessage
-	@within DataServiceServer
+	@within DataServer
 	@param key string
 	@param userId number | string
 	@param data { any }
@@ -291,7 +291,7 @@ end
 
 --[=[
 	@method addGlobalCallback
-	@within DataServiceServer
+	@within DataServer
 	@param key string
 	@param cb (player: Player, data: { any }) -> boolean?
 
@@ -314,7 +314,7 @@ end
 
 --[=[
 	@method addPlayerRemovingCallback
-	@within DataServiceServer
+	@within DataServer
 	@param fn (player: Player, data: any) -> ()
 
 	Add any number of functions to be called when a player is removed.
@@ -346,7 +346,7 @@ end
 
 --[=[
 	@method waitForData
-	@within DataServiceServer
+	@within DataServer
 	@yields
 	@param player Player
 	@return Data?
@@ -371,8 +371,9 @@ end
 
 --[=[
 	@method asyncGetProfile
-	@within DataServiceServer
+	@within DataServer
 	@param userId number | string
+	@yields
 	@return Profile?
 
 	Asynchronously retrieves the profile for the given user ID using internal ProfileStore.
@@ -383,9 +384,9 @@ end
 
 --[=[
 	@method getProfile
-	@within DataServiceServer
+	@within DataServer
 	@param player Player
-	@return Profile
+	@return Profile?
 
 	Retrieves the profile for the given player.
 ]=]
@@ -393,6 +394,32 @@ function data_service.getProfile(self: self, player: Player): any
 	return self._profiles[player]
 end
 
+--[=[
+	@method get
+	@within DataServer
+	@param player Player
+	@param should_assert boolean?
+	@return value.value<T>?
+
+	Returns the player's reactive data root. Pass `true` to error if the
+	player's data is not loaded yet.
+
+	Prefer `:get(player)` over indexing `server[player]` directly.
+
+	```lua
+	-- returns nil if not loaded
+	local playerData = Data.server:get(player)
+	if playerData then
+		playerData.currency(50)
+	end
+	```
+
+	```lua
+	-- errors if not loaded
+	local playerData = Data.server:get(player, true)
+	playerData.currency(50)
+	```
+]=]
 function data_service:get(player: Player, should_assert: boolean?): any
 	local data = self[player]
 
@@ -403,7 +430,7 @@ end
 
 --[=[
 	@method isLoaded
-	@within DataServiceServer
+	@within DataServer
 	@param player Player
 	@return boolean
 
@@ -495,11 +522,11 @@ function data_service._setup_player<T>(self: self, player: Player, data: T): ()
 end
 
 export type data_service<T> = typeof(data_service) & {
-	get: ((self: data_service<T>, player: Player) -> value.value<T>?) & ((self: data_service<T>, player: Player, assert: true) -> value.value<T>),
+	read get: ((self: data_service<T>, player: Player) -> value.value<T>?) & ((self: data_service<T>, player: Player, assert: true) -> value.value<T>),
 }
 
 export type server<T> = data_service<T> & {
-	[Player]: value.value<T>?,
+	read [Player]: value.value<T>?,
 }
 
 return data_service

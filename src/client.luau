@@ -11,6 +11,10 @@ local data_service_client = {
 	playerDataSynced = signal<<()>>(),
 }
 
+--[=[
+	@class DataClient
+	The server-side service for managing player data.
+]=]
 function data_service_client.init<T>(self: self, template: T): client<T>
 	self.data = value.new {}
 
@@ -47,6 +51,26 @@ function data_service_client._load<T>(self: self, data: T)
 	self.playerDataSynced:fire()
 end
 
+--[=[
+	@method use
+	@within DataClient
+	@param callback (data: value.value<any>) -> ()
+	@return value.value<T>?
+
+	```lua
+	-- returns nil if not loaded
+	local playerData = Data.client:get()
+	if playerData then
+		playerData.currency(50)
+	end
+	```
+
+	```lua
+	-- errors if not loaded
+	local playerData = Data.client:get(true)
+	playerData.currency(50)
+	```
+]=]
 function data_service_client:use(callback: (any) -> ())
 	if self.hasSynced then
 		task.spawn(callback, self.data)
@@ -57,6 +81,26 @@ function data_service_client:use(callback: (any) -> ())
 	end
 end
 
+--[=[
+	@method get
+	@within DataClient
+	@param assert_synced boolean?
+	@return value.value<T>?
+
+	```lua
+	-- returns nil if not loaded
+	local playerData = Data.client:get()
+	if playerData then
+		playerData.currency(50)
+	end
+	```
+
+	```lua
+	-- errors if not loaded
+	local playerData = Data.client:get(true)
+	playerData.currency(50)
+	```
+]=]
 function data_service_client:get(assert_synced: boolean?)
 	if assert_synced == true and self.hasSynced == false then error(`Player data has not synced yet. Use playerDataSynced:wait() to wait for it.`) end
 
@@ -87,9 +131,11 @@ function data_service_client._remove<T>(self: self, path: { string }, pos: numbe
 	self:_get_with_path(path).Remove(pos)
 end
 
-export type data_controller<T> = self & {
-	use: (self: data_controller<T>, callback: (value.value<T>) -> ()) -> (),
-	get: ((self: data_controller<T>) -> value.value<T>?) & ((self: data_controller<T>, assert_synced: true) -> value.value<T>),
+export type data_controller<T> = {
+	read use: (self: data_controller<T>, callback: (value.value<T>) -> ()) -> (),
+	read get: ((self: data_controller<T>) -> value.value<T>?) & ((self: data_controller<T>, assert_synced: true) -> value.value<T>),
+	read playerDataSynced: signal.Signal<()>,
+	read hasSynced: boolean,
 }
 
 export type client<T> = data_controller<T>

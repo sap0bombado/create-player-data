@@ -1,6 +1,7 @@
 title = "create-player-data"
+gitRepoUrl = "https://github.com/sap0bombado/create-player-data"
+gitSourceBranch = "main"
 
-classOrder = ["data-server"]
 
 [docusaurus]
 tagline = "Persistent, auto-replicated, and observable data for Roblox Luau."
