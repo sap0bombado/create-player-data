@@ -13,3 +13,4 @@ luau_packages/
 .pesde/
 build/
 sourcemap.json
+package-lock.json
