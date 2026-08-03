@@ -1,15 +1,15 @@
-const LogService = game:GetService 'LogService'
-const Players = game:GetService 'Players'
-const RunService = game:GetService 'RunService'
+local LogService = game:GetService 'LogService'
+local Players = game:GetService 'Players'
+local RunService = game:GetService 'RunService'
 
 if RunService:IsClient() then return {} :: any end
 
-const utils = require './utils'
-const value = require './value'
-const network = require './network'
-const signal = (require) '../signal'
+local network = require './network'
+local utils = require './utils'
+local value = require './value'
+local signal = (require) '../roblox_packages/signal'
 
-const profile_store = if RunService:IsServer() then (require) '../profile_store' else nil :: any
+local profile_store = if RunService:IsServer() then (require) '../roblox_server_packages/profile_store' else nil :: any
 
 local DATA_PREFIX = 'PLAYER_'
 local DEFAULT_PROFILE_STORE_INDEX = 'Default'
@@ -68,7 +68,7 @@ type DataTemplate = { [string | number]: any }
 type DataOptions<T> = utils.data_options<T>
 type MessageData = { key: string, data: { any } }
 
-const function _store_cancel(player: Player)
+local function _store_cancel(player: Player)
 	return {
 		Cancel = function()
 			return player.Parent ~= Players
@@ -76,7 +76,7 @@ const function _store_cancel(player: Player)
 	}
 end
 
-const data_service = {
+local data_service = {
 	_profiles = {} :: any,
 	_loading = {} :: { [Player]: boolean },
 	_sessions = {} :: { [Player]: boolean },
@@ -394,7 +394,7 @@ function data_service.getProfile(self: self, player: Player): any
 end
 
 function data_service:get(player: Player, should_assert: boolean?): any
-	const data = self[player]
+	local data = self[player]
 
 	if should_assert and not data then error(`Data for player {player.Name} is not loaded. Use waitForData() to wait for it.`) end
 

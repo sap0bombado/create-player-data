@@ -1,6 +1,16 @@
 {
-  "name": "dataservicetyped",
+  "name": "create_player_data",
   "tree": {
-    "$path": "src"
+    "$path": "src",
+    "roblox_packages": {
+      "$path": {
+        "optional": "roblox_packages"
+      }
+    },
+    "roblox_server_packages": {
+      "$path": {
+        "optional": "roblox_server_packages"
+      }
+    }
   }
 }

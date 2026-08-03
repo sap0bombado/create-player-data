@@ -1,12 +1,12 @@
-const RunService = game:GetService 'RunService'
+local RunService = game:GetService 'RunService'
 
-const network = require './network'
-const signal = (require) '../signal'
-const value = require './value'
+local network = require './network'
+local signal = (require) '../roblox_packages/signal'
+local value = require './value'
 
 if RunService:IsServer() then return {} :: any end
 
-const data_service_client = {
+local data_service_client = {
 	hasSynced = false,
 	playerDataSynced = signal<<()>>(),
 }
@@ -38,7 +38,7 @@ export type self = typeof(data_service_client)
 function data_service_client._load<T>(self: self, data: T)
 	if self.hasSynced then return end
 
-	const raw = self.data()
+	local raw = self.data()
 	for k, v in data :: any do
 		raw[k] = v
 	end
@@ -68,7 +68,7 @@ function data_service_client._get_with_path<T>(self: self, path: { string }): va
 
 	local current = self.data
 	for i = #path, 2, -1 do
-		const key = path[i]
+		local key = path[i]
 		current = (current :: any)[key]
 	end
 

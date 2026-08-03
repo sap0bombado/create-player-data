@@ -1,4 +1,4 @@
-const remo = (require) '../remo'
+local remo = (require) '../roblox_packages/remo'
 
 return remo.createRemotes {
 	sync = remo.remote(),
