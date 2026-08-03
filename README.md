@@ -6,5 +6,5 @@ A library, not a framework: you call `startSessionAsync` yourself instead of it 
 
 ## Documentation
 
-- [Getting started](./docs/intro.md)
-- [Service functions](./docs/service-functions.md)
+- [Getting started](https://github.com/sap0bombado/create-player-data/blob/main/docs/intro.md)
+- [Service functions](https://github.com/sap0bombado/create-player-data/blob/main/docs/service-functions.md)
