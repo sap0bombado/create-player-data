@@ -5,9 +5,9 @@ local RunService = game:GetService 'RunService'
 if RunService:IsClient() then return {} :: any end
 
 local network = require './network'
+local signal = require '../roblox_packages/signal'
 local utils = require './utils'
 local value = require './value'
-local signal = (require) '../roblox_packages/signal'
 
 local profile_store = if RunService:IsServer() then (require) '../roblox_server_packages/profile_store' else nil :: any
 

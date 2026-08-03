@@ -1,7 +1,7 @@
 local RunService = game:GetService 'RunService'
 
 local network = require './network'
-local signal = (require) '../roblox_packages/signal'
+local signal = require '../roblox_packages/signal'
 local value = require './value'
 
 if RunService:IsServer() then return {} :: any end
