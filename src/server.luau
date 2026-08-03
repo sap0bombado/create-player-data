@@ -1,3 +1,4 @@
+const LogService = game:GetService 'LogService'
 const Players = game:GetService 'Players'
 const RunService = game:GetService 'RunService'
 
@@ -85,9 +86,9 @@ const data_service = {
 	_global_callbacks = {} :: { [string]: (player: Player, { any }) -> boolean? },
 	_global_callback_added = signal() :: signal.Signal<string>,
 
-	playerDataLoaded = signal() :: signal.Signal<Player>,
-	playerDataFailed = signal() :: signal.Signal<Player, string>,
-	playerDataEnded = signal() :: signal.Signal<Player>,
+	onSessionStart = signal() :: signal.Signal<Player>,
+	onSessionEnd = signal() :: signal.Signal<Player>,
+	onSessionFail = signal() :: signal.Signal<Player, string>,
 }
 
 --[=[
@@ -120,7 +121,7 @@ export type self = typeof(data_service)
 	```lua
 	local ok = Data.server:startSessionAsync(player)
 	if not ok then
-		-- playerDataFailed already fired
+		-- onSessionFail already fired
 	end
 	```
 ]=]
@@ -155,8 +156,7 @@ function data_service.startSessionAsync(self: self, player: Player): boolean
 	end)
 
 	if not ok or profile == nil then
-		warn(`Failed to load data for {player.Name}: {profile}`)
-		self:_on_player_data_failed(player, profile)
+		self:_on_player_data_failed(player, `Failed to load data for {player.Name}: {profile}`)
 		return false
 	end
 
@@ -207,7 +207,7 @@ end
 	@param player Player
 
 	Ends the player's profile session: saves and releases it, removes
-	`Data.server[player]`, and fires `playerDataEnded`. Does not touch the Player
+	`Data.server[player]`, and fires `onSessionEnd`. Does not touch the Player
 	instance or kick the player.
 
 	```lua
@@ -238,7 +238,7 @@ function data_service.endSession(self: self, player: Player): ()
 	self._sessions[player] = nil
 
 	self[player] = nil
-	self.playerDataEnded:fire(player)
+	self.onSessionEnd:fire(player)
 end
 
 --[=[
@@ -434,9 +434,15 @@ function data_service._stop_loading(self: self, player: Player): ()
 end
 
 function data_service._on_player_data_failed(self: self, player: Player, reason: string): ()
+	LogService:Warn(`[create-player-data]: Something went wrong with player {player.Name}'s data: {reason}`, {
+		reason = reason,
+		player_instance = player,
+		player_user_id = player.UserId,
+	})
+
 	self:_stop_loading(player)
 	self._sessions[player] = nil
-	self.playerDataFailed:fire(player, reason)
+	self.onSessionFail:fire(player, reason)
 end
 
 function data_service._wait_for_global_callback(self: self, player: Player, messageData: MessageData, processed: () -> ()): ()
@@ -485,7 +491,7 @@ function data_service._setup_player<T>(self: self, player: Player, data: T): ()
 	end)
 
 	self:_resolve_wait(player)
-	self.playerDataLoaded:fire(player)
+	self.onSessionStart:fire(player)
 end
 
 export type data_service<T> = typeof(data_service) & {

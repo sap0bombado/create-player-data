@@ -18,14 +18,21 @@ const function createPlayerData<T>(options: data_options<T>)
 	}
 end
 
-const player_data = createPlayerData {
-	template = {
-		coins = 10,
-		inventory = {} :: { string },
-	},
+const template = {
+	coins = 10,
+	inventory = {} :: { [string]: string },
 }
 
-const player_data_server = player_data.server
-local player: Player = nil :: any
+type template = typeof(template)
+
+const player_data = createPlayerData<<template>> {
+	template = template,
+}
+
+player_data.server.onSessionStart:connect(function(player: Player) end)
+
+player_data.server.onSessionEnd:connect(function(player: Player, sessionData: template)
+	print(`Player {player.Name} has ended their session. Session data: {sessionData}`)
+end)
 
 return createPlayerData

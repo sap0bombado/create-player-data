@@ -234,13 +234,13 @@ meta.__call = function(value: value<any>, ...)
 	return updatedRaw
 end
 
-type ArrayRemove<T> = (number?, boolean?) -> T
-type ArrayInsert<T> = (T, number?, boolean?) -> ()
-type OnArrayRemove<T> = ((T, number) -> ()) -> () -> ()
-type OnArrayInsert<T> = ((T, number) -> ()) -> () -> ()
-type Changed<T> = ((T, T, string?) -> ()) -> () -> ()
-type OnKeyAdded<T> = ((string, T) -> ()) -> () -> ()
-type OnKeyRemoved<T> = ((string, T) -> ()) -> () -> ()
+type ArrayRemove<T> = (index: number?, skipReplication: boolean?) -> T
+type ArrayInsert<T> = (item: T, index: number?, skipReplication: boolean?) -> ()
+type OnArrayRemove<T> = ((item: T, index: number) -> ()) -> () -> ()
+type OnArrayInsert<T> = ((item: T, index: number) -> ()) -> () -> ()
+type Changed<T> = ((new: T, old: T, childKey: string) -> ()) -> () -> ()
+type OnKeyAdded<T> = ((key: string, item: T) -> ()) -> () -> ()
+type OnKeyRemoved<T> = ((key: string, item: T) -> ()) -> () -> ()
 type ValueMeta<T> = { Changed: Changed<T> }
 type ValueDictMeta<T> = { OnKeyAdded: OnKeyAdded<T>, OnKeyRemoved: OnKeyRemoved<T> }
 type ValueArrayMeta<T> = {
