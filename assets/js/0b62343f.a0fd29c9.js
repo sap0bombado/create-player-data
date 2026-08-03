@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[787],{4410:e=>{e.exports=JSON.parse('{"sourceUrl":"https://github.com/sap0bombado/create-player-data/blob/master","baseUrl":"/create-player-data/","classOrder":[],"apiCategories":[]}')}}]);

@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">DataServer | create-player-data</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://sap0bombado.github.io/create-player-data/api/DataServer"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="DataServer | create-player-data"><meta data-rh="true" name="description" content="The server-side service for managing player data."><meta data-rh="true" property="og:description" content="The server-side service for managing player data."><link data-rh="true" rel="canonical" href="https://sap0bombado.github.io/create-player-data/api/DataServer"><link data-rh="true" rel="alternate" href="https://sap0bombado.github.io/create-player-data/api/DataServer" hreflang="en"><link data-rh="true" rel="alternate" href="https://sap0bombado.github.io/create-player-data/api/DataServer" hreflang="x-default"><link rel="stylesheet" href="/create-player-data/assets/css/styles.5ec48d9a.css">
+<script src="/create-player-data/assets/js/runtime~main.35184a3d.js" defer="defer"></script>
+<script src="/create-player-data/assets/js/main.9b620942.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/create-player-data/"><b class="navbar__title text--truncate">create-player-data</b></a><a class="navbar__item navbar__link" href="/create-player-data/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/create-player-data/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/sap0bombado/create-player-data" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/create-player-data/api/DataServer"><span title="​Data​Server" class="linkLabel_WmDU">​Data​Server</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Data</span><span style="display:inline-block">Server</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>The server-side service for managing player data.</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DataTemplate"><code style="text-decoration:none">DataTemplate</code><a href="#DataTemplate" class="hash-link" aria-label="Direct link to DataTemplate" title="Direct link to DataTemplate" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L46"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>DataTemplate<!-- --> = </code> <code class="purple_ieR2">{</code><span><code>[</code><code class="blue_P4bS">string</code><code>]</code></span><code>: </code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code></div><div>
+<p>Defines the structure of player data used by the DataServer.</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> datatemplate <span class="token operator">=</span> <span class="token punctuation">{</span>
+	currency <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span>
+	inventory <span class="token operator">=</span> <span class="token punctuation">{</span>
+		apples <span class="token operator">=</span> <span class="token number">5</span><span class="token punctuation">,</span>
+		oranges <span class="token operator">=</span> <span class="token number">10</span><span class="token punctuation">,</span>
+	<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	settings <span class="token operator">=</span> <span class="token punctuation">{</span>
+		music <span class="token operator">=</span> <span class="token keyword">true</span><span class="token punctuation">,</span>
+	<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	items <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span> <span class="token punctuation">::</span> <span class="token punctuation">{</span> <span class="token punctuation">[</span>string<span class="token punctuation">]</span><span class="token punctuation">:</span> ItemData <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	array <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span> <span class="token punctuation">::</span> <span class="token punctuation">{</span> number <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+</code></pre>
+
+  
+    
+    
+      <div class="admonition admonition-note alert alert--secondary">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+                <path d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path>
+              </svg></span><span class="admonition-title">NOTE</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>Player data automatically reconciles the template on join if new keys are added.</p>
+        </div>
+      </div>
+    
+  
+
+
+  
+    
+    
+      <div class="admonition admonition-warning alert alert--warning">
+        <div class="admonition-heading">
+          <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path>
+              </svg></span><span class="admonition-title">WARNING</span></h5>
+        </div>
+        <div class="admonition-content">
+          <p>Follow JSON rules for all data. (e.g., no Vector3, CFrame, etc.)</p>
+        </div>
+      </div>
+    
+  
+
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DataOptions"><code style="text-decoration:none">DataOptions</code><a href="#DataOptions" class="hash-link" aria-label="Direct link to DataOptions" title="Direct link to DataOptions" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L68"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">interface</code> <code>DataOptions<!-- --> <!-- -->{</code><div class="inset_uKQm"><div><code>template<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/create-player-data/api/DataServer#DataTemplate">DataTemplate</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Template dictionary for player data.</p>
+</span></span></div><div><code>profileStoreIndex<!-- -->: </code><code class="blue_P4bS">string</code><span class="inlineDescription_G7Er">-- <span>
+<p>Index for the ProfileStore.</p>
+</span></span></div><div><code>useMock<!-- -->: </code><code class="blue_P4bS">boolean?</code><span class="inlineDescription_G7Er">-- <span>
+<p>Use Mock data for testing.</p>
+</span></span></div><div><code>viewedUserId<!-- -->: </code><code class="blue_P4bS">number?</code><span class="inlineDescription_G7Er">-- <span>
+<p>User ID to view data for. Use to view a specific player's data without saving.</p>
+</span></span></div><div><code>overridenUserId<!-- -->: </code><code class="blue_P4bS">number?</code><span class="inlineDescription_G7Er">-- <span>
+<p>User ID to override for the profile. Use to play on another player's save.</p>
+</span></span></div><div><code>dontSave<!-- -->: </code><code class="blue_P4bS">boolean?</code><span class="inlineDescription_G7Er">-- <span>
+<p>Prevent saving the profile. Use for testing without saving.</p>
+</span></span></div><div><code>resetData<!-- -->: </code><code class="blue_P4bS">boolean?</code><span class="inlineDescription_G7Er">-- <span>
+<p>Reset the data on player join. Use to wipe data for testing.</p>
+</span></span></div></div><code>}</code></div><div>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> options <span class="token operator">=</span> <span class="token punctuation">{</span>
+	template <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span>path<span class="token punctuation">.</span>to<span class="token punctuation">.</span>datatemplate<span class="token punctuation">)</span><span class="token punctuation">,</span>
+	profileStoreIndex <span class="token operator">=</span> <span class="token string">"Public"</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Provides options for initializing the DataServer.</p>
+</div><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="startSessionAsync"><code style="text-decoration:none">startSessionAsync</code><a href="#startSessionAsync" class="hash-link" aria-label="Direct link to startSessionAsync" title="Direct link to startSessionAsync" translate="no">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L128"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">startSessionAsync</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>
+  Loads the player's data, starting a ProfileStore session and making it
+  available through <code>server[player]</code>. Idempotent: if the player is already
+  loaded, it returns <code>true</code> immediately.
+</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> ok <span class="token operator">=</span> Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">startSessionAsync</span><span class="token punctuation">(</span>player<span class="token punctuation">)</span>
+<span class="token keyword">if</span> <span class="token keyword">not</span> ok <span class="token keyword">then</span>
+	<span class="token comment">-- onSessionFail already fired</span>
+<span class="token keyword">end</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="endSession"><code style="text-decoration:none">endSession</code><a href="#endSession" class="hash-link" aria-label="Direct link to endSession" title="Direct link to endSession" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L217"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">endSession</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  Ends the player's profile session: saves and releases it, removes
+  <code>Data.server[player]</code>, and fires <code>onSessionEnd</code>. Does not touch the Player
+  instance or kick the player.
+</p>
+<pre class="language-lua"><code class="language-lua">Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">endSession</span><span class="token punctuation">(</span>player<span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="resetData"><code style="text-decoration:none">resetData</code><a href="#resetData" class="hash-link" aria-label="Direct link to resetData" title="Direct link to resetData" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L256"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">resetData</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  Resets the data for the specified player by removing their profile from the store.
+  The player is then kicked from the game with a message to rejoin.
+</p>
+<pre class="language-lua"><code class="language-lua">Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">resetData</span><span class="token punctuation">(</span>player<span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="sendGlobalMessage"><code style="text-decoration:none">sendGlobalMessage</code><a href="#sendGlobalMessage" class="hash-link" aria-label="Direct link to sendGlobalMessage" title="Direct link to sendGlobalMessage" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L287"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">sendGlobalMessage</code><code>(</code><div class="inset_uKQm"><div><code>key<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>userId<!-- -->: </code><code class="blue_P4bS">number</code><code class="op_lSLc"> | </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>data<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>
+  Sends a global message to the specified user's profile.
+  Returns true if the message was sent successfully, false otherwise.
+</p>
+<pre class="language-lua"><code class="language-lua">Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">sendGlobalMessage</span><span class="token punctuation">(</span><span class="token string">"SendGift"</span><span class="token punctuation">,</span> userId<span class="token punctuation">,</span> <span class="token punctuation">{</span> currency <span class="token operator">=</span> <span class="token number">100</span><span class="token punctuation">,</span> from <span class="token operator">=</span> <span class="token string">"Friend"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="addGlobalCallback"><code style="text-decoration:none">addGlobalCallback</code><a href="#addGlobalCallback" class="hash-link" aria-label="Direct link to addGlobalCallback" title="Direct link to addGlobalCallback" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L309"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">addGlobalCallback</code><code>(</code><div class="inset_uKQm"><div><code>key<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>cb<!-- -->: </code><code class="purple_ieR2">(</code><div class="inset_uKQm"><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="purple_ieR2">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="green_DgR4">{</code><code class="blue_P4bS">any</code><code class="green_DgR4">}</code></div><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="blue_P4bS">boolean?</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  Adds a global callback function for handling messages with the specified key.
+  The callback receives the player and data as parameters.
+  If the callback returns false, the message is not processed further.
+</p>
+<pre class="language-lua"><code class="language-lua">Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">addGlobalCallback</span><span class="token punctuation">(</span><span class="token string">"SendGift"</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>player<span class="token punctuation">:</span> Player<span class="token punctuation">,</span> data<span class="token punctuation">:</span> <span class="token punctuation">{</span> any <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">:</span> boolean?
+	<span class="token function">print</span><span class="token punctuation">(</span><span class="token string">"Received gift for"</span><span class="token punctuation">,</span> player<span class="token punctuation">.</span>Name<span class="token punctuation">,</span> <span class="token string">"with data:"</span><span class="token punctuation">,</span> data<span class="token punctuation">)</span>
+	<span class="token comment">-- Process the gift here</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="addPlayerRemovingCallback"><code style="text-decoration:none">addPlayerRemovingCallback</code><a href="#addPlayerRemovingCallback" class="hash-link" aria-label="Direct link to addPlayerRemovingCallback" title="Direct link to addPlayerRemovingCallback" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L339"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">addPlayerRemovingCallback</code><code>(</code><code>fn<!-- -->: </code><code class="purple_ieR2">(</code><div class="inset_uKQm"><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="purple_ieR2">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="blue_P4bS">any</code></div><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  Add any number of functions to be called when a player is removed.
+  Used to perform cleanup or save data before the player leaves.
+</p>
+<pre class="language-lua"><code class="language-lua">Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">addPlayerRemovingCallback</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>player<span class="token punctuation">:</span> Player<span class="token punctuation">,</span> data<span class="token punctuation">:</span> any<span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token function">print</span><span class="token punctuation">(</span>player<span class="token punctuation">.</span>Name <span class="token operator">..</span> <span class="token string">" is leaving with data:"</span><span class="token punctuation">,</span> data<span class="token punctuation">)</span>
+	<span class="token comment">-- Perform any cleanup or save operations here</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> disconnect <span class="token operator">=</span> Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">addPlayerRemovingCallback</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>player<span class="token punctuation">:</span> Player<span class="token punctuation">,</span> data<span class="token punctuation">:</span> any<span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span>
+	data<span class="token punctuation">.</span>currency <span class="token operator">=</span> <span class="token number">0</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+
+<span class="token comment">-- Later, you can disconnect this function if needed</span>
+<span class="token function">disconnect</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="waitForData"><code style="text-decoration:none">waitForData</code><a href="#waitForData" class="hash-link" aria-label="Direct link to waitForData" title="Direct link to waitForData" translate="no">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L358"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">waitForData</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code class="blue_P4bS">Data?</code></div><div>
+<p>
+  Waits for the player's data to be initialized and returns it.
+  If the data is already available, it returns immediately.
+  Returns <code>nil</code> if the player leaves before their data loads.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="asyncGetProfile"><code style="text-decoration:none">asyncGetProfile</code><a href="#asyncGetProfile" class="hash-link" aria-label="Direct link to asyncGetProfile" title="Direct link to asyncGetProfile" translate="no">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L381"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">asyncGetProfile</code><code>(</code><code>userId<!-- -->: </code><code class="blue_P4bS">number</code><code class="op_lSLc"> | </code><code class="blue_P4bS">string</code><code>) → </code><code class="blue_P4bS">Profile?</code></div><div>
+<p>Asynchronously retrieves the profile for the given user ID using internal ProfileStore.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="getProfile"><code style="text-decoration:none">getProfile</code><a href="#getProfile" class="hash-link" aria-label="Direct link to getProfile" title="Direct link to getProfile" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L393"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">getProfile</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code class="blue_P4bS">Profile?</code></div><div>
+<p>Retrieves the profile for the given player.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="get"><code style="text-decoration:none">get</code><a href="#get" class="hash-link" aria-label="Direct link to get" title="Direct link to get" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L423"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">get</code><code>(</code><div class="inset_uKQm"><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>should_assert<!-- -->: </code><code class="blue_P4bS">boolean?</code></div></div><code>) → </code><code class="blue_P4bS">value.value</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code class="blue_P4bS">?</code></div><div>
+<p>
+  Returns the player's reactive data root. Pass <code>true</code> to error if the
+  player's data is not loaded yet.
+</p>
+<p>Prefer <code>:get(player)</code> over indexing <code>server[player]</code> directly.</p>
+<pre class="language-lua"><code class="language-lua"><span class="token comment">-- returns nil if not loaded</span>
+<span class="token keyword">local</span> playerData <span class="token operator">=</span> Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">get</span><span class="token punctuation">(</span>player<span class="token punctuation">)</span>
+<span class="token keyword">if</span> playerData <span class="token keyword">then</span>
+	playerData<span class="token punctuation">.</span><span class="token function">currency</span><span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span>
+</code></pre>
+<pre class="language-lua"><code class="language-lua"><span class="token comment">-- errors if not loaded</span>
+<span class="token keyword">local</span> playerData <span class="token operator">=</span> Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">get</span><span class="token punctuation">(</span>player<span class="token punctuation">,</span> <span class="token keyword">true</span><span class="token punctuation">)</span>
+playerData<span class="token punctuation">.</span><span class="token function">currency</span><span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="isLoaded"><code style="text-decoration:none">isLoaded</code><a href="#isLoaded" class="hash-link" aria-label="Direct link to isLoaded" title="Direct link to isLoaded" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/sap0bombado/create-player-data/blob/master/src/server.luau#L445"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DataServer<!-- -->:</code><code class="green_DgR4">isLoaded</code><code>(</code><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Returns whether the player's data has been loaded and is available through <code>server[player]</code>.</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">if</span> Data<span class="token punctuation">.</span>server<span class="token punctuation">:</span><span class="token function">isLoaded</span><span class="token punctuation">(</span>player<span class="token punctuation">)</span> <span class="token keyword">then</span>
+	<span class="token function">print</span><span class="token punctuation">(</span>Data<span class="token punctuation">.</span>server<span class="token punctuation">[</span>player<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">coins</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span>
+</code></pre>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;startSessionAsync&quot;,
+            &quot;desc&quot;: &quot;Loads the player&#x27;s data, starting a ProfileStore session and making it\navailable through `server[player]`. Idempotent: if the player is already\nloaded, it returns `true` immediately.\n\n```lua\nlocal ok = Data.server:startSessionAsync(player)\nif not ok then\n\t-- onSessionFail already fired\nend\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;yields&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 128,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;endSession&quot;,
+            &quot;desc&quot;: &quot;Ends the player&#x27;s profile session: saves and releases it, removes\n`Data.server[player]`, and fires `onSessionEnd`. Does not touch the Player\ninstance or kick the player.\n\n```lua\nData.server:endSession(player)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 217,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;resetData&quot;,
+            &quot;desc&quot;: &quot;Resets the data for the specified player by removing their profile from the store.\nThe player is then kicked from the game with a message to rejoin.\n\n```lua\nData.server:resetData(player)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 256,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;sendGlobalMessage&quot;,
+            &quot;desc&quot;: &quot;Sends a global message to the specified user&#x27;s profile.\nReturns true if the message was sent successfully, false otherwise.\n\n```lua\nData.server:sendGlobalMessage(\&quot;SendGift\&quot;, userId, { currency = 100, from = \&quot;Friend\&quot; })\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;key&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;userId&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number | string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;data&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ any }&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 287,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;addGlobalCallback&quot;,
+            &quot;desc&quot;: &quot;Adds a global callback function for handling messages with the specified key.\nThe callback receives the player and data as parameters.\nIf the callback returns false, the message is not processed further.\n\n```lua\nData.server:addGlobalCallback(\&quot;SendGift\&quot;, function(player: Player, data: { any }): boolean?\n\tprint(\&quot;Received gift for\&quot;, player.Name, \&quot;with data:\&quot;, data)\n\t-- Process the gift here\nend)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;key&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;cb&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(player: Player, data: { any }) -&gt; boolean?&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 309,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;addPlayerRemovingCallback&quot;,
+            &quot;desc&quot;: &quot;Add any number of functions to be called when a player is removed.\nUsed to perform cleanup or save data before the player leaves.\n\n```lua\nData.server:addPlayerRemovingCallback(function(player: Player, data: any): ()\n\tprint(player.Name .. \&quot; is leaving with data:\&quot;, data)\n\t-- Perform any cleanup or save operations here\nend)\n```\n\n```lua\nlocal disconnect = Data.server:addPlayerRemovingCallback(function(player: Player, data: any): ()\n\tdata.currency = 0\nend)\n\n-- Later, you can disconnect this function if needed\ndisconnect()\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;fn&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(player: Player, data: any) -&gt; ()&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 339,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;waitForData&quot;,
+            &quot;desc&quot;: &quot;Waits for the player&#x27;s data to be initialized and returns it.\nIf the data is already available, it returns immediately.\nReturns `nil` if the player leaves before their data loads.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Data?&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;yields&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 358,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;asyncGetProfile&quot;,
+            &quot;desc&quot;: &quot;Asynchronously retrieves the profile for the given user ID using internal ProfileStore.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;userId&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number | string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Profile?&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;yields&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 381,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getProfile&quot;,
+            &quot;desc&quot;: &quot;Retrieves the profile for the given player.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Profile?&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 393,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;get&quot;,
+            &quot;desc&quot;: &quot;Returns the player&#x27;s reactive data root. Pass `true` to error if the\nplayer&#x27;s data is not loaded yet.\n\nPrefer `:get(player)` over indexing `server[player]` directly.\n\n```lua\n-- returns nil if not loaded\nlocal playerData = Data.server:get(player)\nif playerData then\n\tplayerData.currency(50)\nend\n```\n\n```lua\n-- errors if not loaded\nlocal playerData = Data.server:get(player, true)\nplayerData.currency(50)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;should_assert&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;value.value&lt;T&gt;?&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 423,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;isLoaded&quot;,
+            &quot;desc&quot;: &quot;Returns whether the player&#x27;s data has been loaded and is available through `server[player]`.\n\n```lua\nif Data.server:isLoaded(player) then\n\tprint(Data.server[player].coins())\nend\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 445,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [
+        {
+            &quot;name&quot;: &quot;DataTemplate&quot;,
+            &quot;desc&quot;: &quot;Defines the structure of player data used by the DataServer.\n\n```lua\nlocal datatemplate = {\n\tcurrency = 0,\n\tinventory = {\n\t\tapples = 5,\n\t\toranges = 10,\n\t},\n\tsettings = {\n\t\tmusic = true,\n\t},\n\titems = {} :: { [string]: ItemData },\n\tarray = {} :: { number },\n}\n```\n\n\n:::note\nPlayer data automatically reconciles the template on join if new keys are added.\n:::\n:::warning\nFollow JSON rules for all data. (e.g., no Vector3, CFrame, etc.)\n:::&quot;,
+            &quot;lua_type&quot;: &quot;{ [string]: any }&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 46,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;DataOptions&quot;,
+            &quot;desc&quot;: &quot;```lua\nlocal options = {\n\ttemplate = require(path.to.datatemplate),\n\tprofileStoreIndex = \&quot;Public\&quot;,\n}\n```\n\nProvides options for initializing the DataServer.&quot;,
+            &quot;fields&quot;: [
+                {
+                    &quot;name&quot;: &quot;template&quot;,
+                    &quot;lua_type&quot;: &quot;DataTemplate&quot;,
+                    &quot;desc&quot;: &quot;Template dictionary for player data.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;profileStoreIndex&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;,
+                    &quot;desc&quot;: &quot;Index for the ProfileStore.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;useMock&quot;,
+                    &quot;lua_type&quot;: &quot;boolean?&quot;,
+                    &quot;desc&quot;: &quot;Use Mock data for testing.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;viewedUserId&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;,
+                    &quot;desc&quot;: &quot;User ID to view data for. Use to view a specific player&#x27;s data without saving.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;overridenUserId&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;,
+                    &quot;desc&quot;: &quot;User ID to override for the profile. Use to play on another player&#x27;s save.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;dontSave&quot;,
+                    &quot;lua_type&quot;: &quot;boolean?&quot;,
+                    &quot;desc&quot;: &quot;Prevent saving the profile. Use for testing without saving.&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;resetData&quot;,
+                    &quot;lua_type&quot;: &quot;boolean?&quot;,
+                    &quot;desc&quot;: &quot;Reset the data on player join. Use to wipe data for testing.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 68,
+                &quot;path&quot;: &quot;src/server.luau&quot;
+            }
+        }
+    ],
+    &quot;name&quot;: &quot;DataServer&quot;,
+    &quot;desc&quot;: &quot;The server-side service for managing player data.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 98,
+        &quot;path&quot;: &quot;src/server.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#DataOptions" class="table-of-contents__link toc-highlight">DataOptions</a></li><li><a href="#DataTemplate" class="table-of-contents__link toc-highlight">DataTemplate</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#addGlobalCallback" class="table-of-contents__link toc-highlight">:addGlobalCallback</a></li><li><a href="#addPlayerRemovingCallback" class="table-of-contents__link toc-highlight">:addPlayerRemovingCallback</a></li><li><a href="#asyncGetProfile" class="table-of-contents__link toc-highlight">:asyncGetProfile</a></li><li><a href="#endSession" class="table-of-contents__link toc-highlight">:endSession</a></li><li><a href="#get" class="table-of-contents__link toc-highlight">:get</a></li><li><a href="#getProfile" class="table-of-contents__link toc-highlight">:getProfile</a></li><li><a href="#isLoaded" class="table-of-contents__link toc-highlight">:isLoaded</a></li><li><a href="#resetData" class="table-of-contents__link toc-highlight">:resetData</a></li><li><a href="#sendGlobalMessage" class="table-of-contents__link toc-highlight">:sendGlobalMessage</a></li><li><a href="#startSessionAsync" class="table-of-contents__link toc-highlight">:startSessionAsync</a></li><li><a href="#waitForData" class="table-of-contents__link toc-highlight">:waitForData</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 sap0bombado. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>
