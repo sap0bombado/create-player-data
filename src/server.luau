@@ -4,12 +4,11 @@ local RunService = game:GetService 'RunService'
 
 if RunService:IsClient() then return {} :: any end
 
-local network = require './network'
+local create_replication = require '../roblox_packages/create_replication'
+local profile_store = require '../roblox_server_packages/profile_store'
+local replication = require './replication'
 local signal = require '../roblox_packages/signal'
 local utils = require './utils'
-local value = require './value'
-
-local profile_store = if RunService:IsServer() then (require) '../roblox_server_packages/profile_store' else nil :: any
 
 local DATA_PREFIX = 'PLAYER_'
 local DEFAULT_PROFILE_STORE_INDEX = 'Default'
@@ -76,36 +75,36 @@ local function _store_cancel(player: Player)
 	}
 end
 
-local data_service = {
-	_profiles = {} :: any,
-	_loading = {} :: { [Player]: boolean },
-	_sessions = {} :: { [Player]: boolean },
-	_wait_signals = {} :: { [Player]: signal.Signal<any> },
-	_removal_functions = {} :: { (player: Player, data: any) -> () },
-	_pending_message_waits = {} :: { [Player]: { any } },
-	_global_callbacks = {} :: { [string]: (player: Player, { any }) -> boolean? },
-	_global_callback_added = signal() :: signal.Signal<string>,
-
-	onSessionStart = signal() :: signal.Signal<Player>,
-	onSessionEnd = signal() :: signal.Signal<Player>,
-	onSessionFail = signal() :: signal.Signal<Player, string>,
-}
+local data_server_class = {}
+data_server_class.__index = data_server_class
 
 --[=[
 	@class DataServer
 	The server-side service for managing player data.
 ]=]
-function data_service.init<T>(self: self, options: DataOptions<T>): server<T>
+function data_server_class.new<T>(options: DataOptions<T>)
 	assert(RunService:IsServer(), 'DataServer can only be used on the server.')
 
-	value.shouldRecordPath = true
-	self.options = options
-	self.playerStore = profile_store.New(options.profileStoreIndex or DEFAULT_PROFILE_STORE_INDEX, options.template)
+	const self = {
+		options = options,
+		playerStore = profile_store.New(options.profileStoreIndex or DEFAULT_PROFILE_STORE_INDEX, options.template),
+		_profiles = {} :: any,
+		_loading = {} :: { [Player]: boolean },
+		_sessions = {} :: { [Player]: boolean },
+		_wait_signals = {} :: { [Player]: signal.Signal<any> },
+		_removal_functions = {} :: { (player: Player, data: any) -> () },
+		_pending_message_waits = {} :: { [Player]: { any } },
+		_global_callbacks = {} :: { [string]: (player: Player, { any }) -> boolean? },
+		_global_callback_added = signal() :: signal.Signal<string>,
+		onSessionStart = signal() :: signal.Signal<Player>,
+		onSessionEnd = signal() :: signal.Signal<Player>,
+		onSessionFail = signal() :: signal.Signal<Player, string>,
+	}
+
+	setmetatable(self, data_server_class)
 
 	return self
 end
-
-export type self = typeof(data_service)
 
 --[=[
 	@method startSessionAsync
@@ -125,7 +124,7 @@ export type self = typeof(data_service)
 	end
 	```
 ]=]
-function data_service.startSessionAsync(self: self, player: Player): boolean
+function data_server_class.startSessionAsync(self: server, player: Player): boolean
 	if self[player] ~= nil then return true end
 
 	if self._loading[player] then
@@ -214,7 +213,7 @@ end
 	Data.server:endSession(player)
 	```
 ]=]
-function data_service.endSession(self: self, player: Player): ()
+function data_server_class.endSession(self: server, player: Player): ()
 	self:_stop_loading(player)
 
 	local pending = self._pending_message_waits[player]
@@ -253,7 +252,7 @@ end
 	Data.server:resetData(player)
 	```
 ]=]
-function data_service.resetData(self: self, player: Player): ()
+function data_server_class.resetData(self: server, player: Player): ()
 	local userId = self:_resolve_user_id(player)
 	local index = self:_get_profile_key(userId)
 	local profile = self._profiles[player] :: any
@@ -284,7 +283,7 @@ end
 	Data.server:sendGlobalMessage("SendGift", userId, { currency = 100, from = "Friend" })
 	```
 ]=]
-function data_service.sendGlobalMessage(self: self, key: string, userId: number | string, data: { any }): boolean
+function data_server_class.sendGlobalMessage(self: server, key: string, userId: number | string, data: { any }): boolean
 	local messageData: MessageData = { key = key, data = data }
 	return self.playerStore:MessageAsync(self:_get_profile_key(userId), messageData)
 end
@@ -306,7 +305,7 @@ end
 	end)
 	```
 ]=]
-function data_service.addGlobalCallback(self: self, key: string, cb: (player: Player, { any }) -> boolean?): ()
+function data_server_class.addGlobalCallback(self: server, key: string, cb: (player: Player, { any }) -> boolean?): ()
 	assert(self._global_callbacks[key] == nil, 'Global callback already exists for key: ' .. key)
 	self._global_callbacks[key] = cb
 	self._global_callback_added:fire(key)
@@ -336,7 +335,7 @@ end
 	disconnect()
 	```
 ]=]
-function data_service.addPlayerRemovingCallback(self: self, fn: (player: Player, data: any) -> ()): () -> ()
+function data_server_class.addPlayerRemovingCallback(self: server, fn: (player: Player, data: any) -> ()): () -> ()
 	table.insert(self._removal_functions, fn)
 	return function()
 		local index = table.find(self._removal_functions, fn)
@@ -355,7 +354,7 @@ end
 	If the data is already available, it returns immediately.
 	Returns `nil` if the player leaves before their data loads.
 ]=]
-function data_service.waitForData(self: self, player: Player): any
+function data_server_class.waitForData(self: server, player: Player): any
 	local data = self[player]
 	if data then return data end
 
@@ -378,7 +377,7 @@ end
 
 	Asynchronously retrieves the profile for the given user ID using internal ProfileStore.
 ]=]
-function data_service.asyncGetProfile(self: self, userId: number | string): any?
+function data_server_class.asyncGetProfile(self: server, userId: number | string): any?
 	return self.playerStore:GetAsync(self:_get_profile_key(userId))
 end
 
@@ -390,7 +389,7 @@ end
 
 	Retrieves the profile for the given player.
 ]=]
-function data_service.getProfile(self: self, player: Player): any
+function data_server_class.getProfile(self: server, player: Player): any
 	return self._profiles[player]
 end
 
@@ -420,13 +419,13 @@ end
 	playerData.currency(50)
 	```
 ]=]
-function data_service:get(player: Player, should_assert: boolean?): any
+data_server_class['get' :: never] = function<T>(self: server<T>, player: Player, should_assert: boolean?): any
 	local data = self[player]
 
 	if should_assert and not data then error(`Data for player {player.Name} is not loaded. Use waitForData() to wait for it.`) end
 
 	return data
-end
+end :: any
 
 --[=[
 	@method isLoaded
@@ -442,11 +441,11 @@ end
 	end
 	```
 ]=]
-function data_service.isLoaded(self: self, player: Player): boolean
+function data_server_class.isLoaded(self: server, player: Player): boolean
 	return self[player] ~= nil
 end
 
-function data_service._resolve_wait(self: self, player: Player): ()
+function data_server_class._resolve_wait(self: server, player: Player): ()
 	local waitSignal = self._wait_signals[player]
 	if waitSignal then
 		waitSignal:fire()
@@ -455,12 +454,12 @@ function data_service._resolve_wait(self: self, player: Player): ()
 	end
 end
 
-function data_service._stop_loading(self: self, player: Player): ()
+function data_server_class._stop_loading(self: server, player: Player): ()
 	self._loading[player] = nil
 	self:_resolve_wait(player)
 end
 
-function data_service._on_player_data_failed(self: self, player: Player, reason: string): ()
+function data_server_class._on_player_data_failed(self: server, player: Player, reason: string): ()
 	LogService:Warn(`[create-player-data]: Something went wrong with player {player.Name}'s data: {reason}`, {
 		reason = reason,
 		player_instance = player,
@@ -472,7 +471,7 @@ function data_service._on_player_data_failed(self: self, player: Player, reason:
 	self.onSessionFail:fire(player, reason)
 end
 
-function data_service._wait_for_global_callback(self: self, player: Player, messageData: MessageData, processed: () -> ()): ()
+function data_server_class._wait_for_global_callback(self: server, player: Player, messageData: MessageData, processed: () -> ()): ()
 	local waitConnection: any
 	waitConnection = self._global_callback_added:connect(function(key: string)
 		if key ~= messageData.key then return end
@@ -498,35 +497,65 @@ function data_service._wait_for_global_callback(self: self, player: Player, mess
 	table.insert(pending, waitConnection)
 end
 
-function data_service._get_profile_key(self: self, userId: number | string): string
+function data_server_class._get_profile_key(self: server, userId: number | string): string
 	return self:_get_data_prefix() .. tostring(userId)
 end
 
-function data_service._resolve_user_id(self: self, player: Player): number
+function data_server_class._resolve_user_id(self: server, player: Player): number
 	return self.options.overridenUserId or self.options.viewedUserId or player.UserId
 end
 
-function data_service._get_data_prefix(self: self): string
+function data_server_class._get_data_prefix(self: server): string
 	return self.options.profileStoreDataPrefix or DATA_PREFIX
 end
 
-function data_service._setup_player<T>(self: self, player: Player, data: T): ()
-	network.sync:fire(player, data)
-
-	self[player] = value.new(data, nil, nil, function(replicateType: string, path: { string }, ...)
-		network.replicate:fire(player, replicateType, path, ...)
-	end)
+function data_server_class._setup_player<T>(self: server, player: Player, data: T): ()
+	self[player] = replication.server:addPlayer(player, data)
 
 	self:_resolve_wait(player)
 	self.onSessionStart:fire(player)
 end
 
-export type data_service<T> = typeof(data_service) & {
-	read get: ((self: data_service<T>, player: Player) -> value.value<T>?) & ((self: data_service<T>, player: Player, assert: true) -> value.value<T>),
+export type server<T = any> = {
+	read new: (options: DataOptions<T>) -> server<T>,
+
+	read options: DataOptions<T>,
+	read playerStore: any,
+	[Player]: create_replication.value<T>?,
+
+	read startSessionAsync: (self: server<T>, player: Player) -> boolean,
+	read endSession: (self: server<T>, player: Player) -> (),
+	read resetData: (self: server<T>, player: Player) -> (),
+	read sendGlobalMessage: (self: server<T>, key: string, userId: number | string, data: { any }) -> boolean,
+	read addGlobalCallback: (self: server<T>, key: string, cb: (player: Player, { any }) -> boolean?) -> (),
+	read addPlayerRemovingCallback: (self: server<T>, fn: (player: Player, data: any) -> ()) -> () -> (),
+	read waitForData: (self: server<T>, player: Player) -> create_replication.value<T>?,
+	read asyncGetProfile: (self: server<T>, userId: number | string) -> profile_store.Profile<T>?,
+	read getProfile: ((self: server<T>, player: Player) -> profile_store.Profile<T>?) & ((self: server<T>, player: Player, assert: true) -> profile_store.Profile<T>),
+	read get: ((self: server<T>, player: Player) -> create_replication.value<T>?) & ((self: server<T>, player: Player, assert: true) -> create_replication.value<T>),
+	read isLoaded: (self: server<T>, player: Player) -> boolean,
+
+	read onSessionStart: signal.Signal<Player>,
+	read onSessionEnd: signal.Signal<Player>,
+	read onSessionFail: signal.Signal<Player, string>,
+
+	read _profiles: { [Player]: profile_store.Profile<T> },
+	read _loading: { [Player]: boolean },
+	read _sessions: { [Player]: boolean },
+	read _wait_signals: { [Player]: signal.Signal<any> },
+	read _removal_functions: { (player: Player, data: any) -> () },
+	read _pending_message_waits: { [Player]: { any } },
+	read _global_callbacks: { [string]: (player: Player, { any }) -> boolean? },
+	read _global_callback_added: signal.Signal<string>,
+
+	read _resolve_wait: (self: server<T>, player: Player) -> (),
+	read _stop_loading: (self: server<T>, player: Player) -> (),
+	read _on_player_data_failed: (self: server<T>, player: Player, reason: string) -> (),
+	read _wait_for_global_callback: (self: server<T>, player: Player, messageData: MessageData, processed: () -> ()) -> (),
+	read _get_profile_key: (self: server<T>, userId: number | string) -> string,
+	read _resolve_user_id: (self: server<T>, player: Player) -> number,
+	read _get_data_prefix: (self: server<T>) -> string,
+	read _setup_player: (self: server<T>, player: Player, data: T) -> (),
 }
 
-export type server<T> = data_service<T> & {
-	read [Player]: value.value<T>?,
-}
-
-return data_service
+return data_server_class

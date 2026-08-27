@@ -1,84 +1,81 @@
 local RunService = game:GetService 'RunService'
 
-local network = require './network'
-local signal = require '../roblox_packages/signal'
-local value = require './value'
+local create_replication = require '../roblox_packages/create_replication'
+local replication = require './replication'
+local scope = require '../roblox_packages/scope'
 
 if RunService:IsServer() then return {} :: any end
 
-local data_service_client = {
-	hasSynced = false,
-	playerDataSynced = signal<<()>>(),
-}
+local data_client_class = {}
+data_client_class.__index = data_client_class
 
 --[=[
 	@class DataClient
 	The server-side service for managing player data.
 ]=]
-function data_service_client.init<T>(self: self, template: T): client<T>
-	self.data = value.new {}
+function data_client_class.new<T>(template: T)
+	const self = {
+		hasSynced = true,
+		_scope = scope(),
+	}
+	setmetatable(self, data_client_class)
 
-	network.sync:connect(function(data: T)
-		self:_load(data)
-	end)
-
-	network.replicate:connect(function(replicateType: string, path: { string }, ...: any)
-		if replicateType == 'set' then
-			self:_set(path, ...)
-		elseif replicateType == 'insert' then
-			self:_insert(path, ...)
-		elseif replicateType == 'remove' then
-			self:_remove(path, ...)
-		end
-	end)
-
-	if not RunService:IsRunning() then self:_load(template) end
-
-	return self :: any
+	return self
 end
 
-export type self = typeof(data_service_client)
+export type client<T = any> = {
+	read new: (template: T) -> client<T>,
 
-function data_service_client._load<T>(self: self, data: T)
-	if self.hasSynced then return end
+	read hasSynced: boolean,
+	read _scope: scope.Scope,
 
-	local raw = self.data()
-	for k, v in data :: any do
-		raw[k] = v
-	end
-
-	self.hasSynced = true
-	self.playerDataSynced:fire()
-end
+	read awaitForData: (self: client<T>, callback: (create_replication.value<T>) -> ()) -> () -> (),
+	read waitForData: ((self: client<T>) -> create_replication.value<T>) & ((self: client<T>, timeout: number) -> create_replication.value<T>?),
+	read get: ((self: client<T>) -> create_replication.value<T>?) & ((self: client<T>, assert_synced: true) -> create_replication.value<T>),
+}
 
 --[=[
-	@method use
+	@method awaitForData
 	@within DataClient
 	@param callback (data: value.value<any>) -> ()
-	@return value.value<T>?
+	@param timeout number?
+	@return () -> ()
 
 	```lua
-	-- returns nil if not loaded
-	local playerData = Data.client:get()
-	if playerData then
-		playerData.currency(50)
-	end
-	```
+	local cleanup = player_data.client:awaitForData(function(data)
+		print(data.currency())
+	end) -- timeout
 
-	```lua
-	-- errors if not loaded
-	local playerData = Data.client:get(true)
-	playerData.currency(50)
+	cleanup()
 	```
 ]=]
-function data_service_client:use(callback: (any) -> ())
-	if self.hasSynced then
-		task.spawn(callback, self.data)
-	else
-		self.playerDataSynced:once(function()
-			task.spawn(callback, self.data)
-		end)
+data_client_class['awaitForData' :: never] = function<T>(self: client<T>, callback: (any) -> (), timeout: number?)
+	return replication.client:awaitForData(callback, timeout)
+end :: any
+
+--[=[
+	@method waitForData
+	@within DataClient
+	@param timeout number?
+	@return value.value<any>?
+	@yields
+
+	```lua
+	-- returns nil if not loaded (only with timeout)
+	local data = player_data.client:waitForData()
+	print(data.currency())
+	```
+	
+	```lua
+	local data = player_data.client:waitForData(5)
+	
+	if data then
+		print(data.currency())
 	end
+	```
+]=]
+data_client_class['waitForData' :: never] = function<T>(self: client<T>, timeout: number?)
+	return replication.client:waitForData(timeout :: any)
 end
 
 --[=[
@@ -88,56 +85,21 @@ end
 	@return value.value<T>?
 
 	```lua
-	-- returns nil if not loaded
-	local playerData = Data.client:get()
-	if playerData then
-		playerData.currency(50)
-	end
-	```
-
-	```lua
 	-- errors if not loaded
 	local playerData = Data.client:get(true)
 	playerData.currency(50)
 	```
+
+	```lua
+	-- returns nil if not loaded
+	local data = Data.client:get()
+	if data then
+		print(data.currency())
+	end		
+	```
 ]=]
-function data_service_client:get(assert_synced: boolean?)
-	if assert_synced == true and self.hasSynced == false then error(`Player data has not synced yet. Use playerDataSynced:wait() to wait for it.`) end
+data_client_class['get' :: never] = function<T>(self: client<T>, assert_synced: boolean?)
+	return replication.client
+end :: any
 
-	return self.data
-end
-
-function data_service_client._get_with_path<T>(self: self, path: { string }): value.value<any>
-	if not self.hasSynced then self.playerDataSynced:wait() end
-
-	local current = self.data
-	for i = #path, 2, -1 do
-		local key = path[i]
-		current = (current :: any)[key]
-	end
-
-	return current[path[1]]
-end
-
-function data_service_client._set<T>(self: self, path: { string }, value: any?)
-	self:_get_with_path(path)(value)
-end
-
-function data_service_client._insert<T>(self: self, path: { string }, item: any, pos: number?)
-	self:_get_with_path(path).Insert(item, pos)
-end
-
-function data_service_client._remove<T>(self: self, path: { string }, pos: number?)
-	self:_get_with_path(path).Remove(pos)
-end
-
-export type data_controller<T> = {
-	read use: (self: data_controller<T>, callback: (value.value<T>) -> ()) -> (),
-	read get: ((self: data_controller<T>) -> value.value<T>?) & ((self: data_controller<T>, assert_synced: true) -> value.value<T>),
-	read playerDataSynced: signal.Signal<()>,
-	read hasSynced: boolean,
-}
-
-export type client<T> = data_controller<T>
-
-return data_service_client
+return data_client_class

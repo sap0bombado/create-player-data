@@ -1,7 +1,10 @@
 {
   "name": "create_player_data",
   "tree": {
-    "$path": "src",
+    "$className": "Folder",
+    "src": {
+      "$path": "src"
+    },
     "roblox_packages": {
       "$path": {
         "optional": "roblox_packages"
